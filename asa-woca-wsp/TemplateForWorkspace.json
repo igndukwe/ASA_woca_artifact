@@ -170,35 +170,6 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"storedProcedureName": "[bronze].[create_views]",
-										"storedProcedureParameters": {
-											"folder": {
-												"value": {
-													"value": "@item().TableName",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "ls_woca_ldw",
-										"type": "LinkedServiceReference"
-									}
-								},
-								{
-									"name": "Create View_copy1",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
 										"storedProcedureName": "[bronze].[usp_create_views]",
 										"storedProcedureParameters": {
 											"folder": {
