@@ -22,7 +22,7 @@
 						"partitionOption": "None"
 					},
 					"dataset": {
-						"referenceName": "ds_waco_db",
+						"referenceName": "ds_woca_db_lookup_activity",
 						"type": "DatasetReference"
 					},
 					"firstRowOnly": false
@@ -86,7 +86,7 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "ds_waco_db",
+									"referenceName": "ds_waco_db_copy_activity",
 									"type": "DatasetReference",
 									"parameters": {
 										"SchemaName": {

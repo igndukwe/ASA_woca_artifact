@@ -1,0 +1,12 @@
+{
+	"name": "ds_woca_db_lookup_activity",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_waco_sql_db",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": []
+	}
+}
