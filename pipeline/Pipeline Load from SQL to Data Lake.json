@@ -29,7 +29,7 @@
 				}
 			},
 			{
-				"name": "ForEach Each Table",
+				"name": "For Each Table",
 				"type": "ForEach",
 				"dependsOn": [
 					{
@@ -112,6 +112,30 @@
 									}
 								}
 							]
+						},
+						{
+							"name": "Create View",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data from SQL to Data Lake",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "ls_waco_sql_db",
+								"type": "LinkedServiceReference"
+							}
 						}
 					]
 				}
