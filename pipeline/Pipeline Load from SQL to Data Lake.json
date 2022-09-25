@@ -132,6 +132,18 @@
 								"secureInput": false
 							},
 							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[bronze].[create_views]",
+								"storedProcedureParameters": {
+									"folder": {
+										"value": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
 							"linkedServiceName": {
 								"referenceName": "ls_woca_ldw",
 								"type": "LinkedServiceReference"
