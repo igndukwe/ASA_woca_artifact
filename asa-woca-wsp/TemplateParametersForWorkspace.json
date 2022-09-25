@@ -11,6 +11,9 @@
 		"ls_waco_sql_db_connectionString": {
 			"value": ""
 		},
+		"ls_woca_ldw_connectionString": {
+			"value": ""
+		},
 		"asa-woca-wsp-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"value": "https://asawocastaccdl.dfs.core.windows.net"
 		},

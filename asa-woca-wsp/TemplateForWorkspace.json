@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_waco_sql_db'"
 		},
+		"ls_woca_ldw_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_woca_ldw'"
+		},
 		"asa-woca-wsp-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://asawocastaccdl.dfs.core.windows.net"
@@ -145,6 +149,42 @@
 											}
 										}
 									]
+								},
+								{
+									"name": "Create View",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy data from SQL to Data Lake",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[bronze].[create_views]",
+										"storedProcedureParameters": {
+											"folder": {
+												"value": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_woca_ldw",
+										"type": "LinkedServiceReference"
+									}
 								}
 							]
 						}
@@ -159,7 +199,8 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/datasets/ds_woca_db_lookup_activity')]",
 				"[concat(variables('workspaceId'), '/datasets/ds_waco_db_copy_activity')]",
-				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]"
+				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]"
 			]
 		},
 		{
@@ -370,6 +411,65 @@
 					},
 					"currentConnection": {
 						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_woca_ldw')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_woca_ldw_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/2_usp_create_table_views')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW beonze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/Family/**',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n\n\nDECLARE @create_view_sql_stmt NVARCHAR(MAX),\n    @folder NVARCHAR(50) = 'Family'\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW beonze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
