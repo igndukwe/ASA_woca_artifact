@@ -1,0 +1,17 @@
+{
+	"name": "s2b_usp_create_external_data_source",
+	"properties": {
+		"content": {
+			"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/bronze/'\n)\nGO\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "woca_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
