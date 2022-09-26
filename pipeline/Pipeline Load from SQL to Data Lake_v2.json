@@ -139,11 +139,12 @@
 							"typeProperties": {
 								"scripts": [
 									{
-										"type": {
-											"value": "DROP VIEW IF EXISTS bronze.vw_@{item().TableName}\nGO\n\nCREATE VIEW bronze.vw_@{item().TableName}\nAS\nSELECT\n    *\nFROM \n    OPENROWSET(\n        BULK '@{item().TableName}'\n        DATA_SOURCE = '@{pipeline().parameters.datasrc}'\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO",
-											"type": "Expression"
-										},
-										"text": ""
+										"type": "NonQuery",
+										"text": "DROP VIEW IF EXISTS bronze.vw_@{item().TableName};"
+									},
+									{
+										"type": "NonQuery",
+										"text": "CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK '@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'PARQUET' \n        ) AS [result];"
 									}
 								]
 							}
