@@ -639,66 +639,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/Family/**',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n\n\nDECLARE @create_view_sql_stmt NVARCHAR(MAX),\n    @folder NVARCHAR(50) = 'Family'\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW beonze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n\n\n\n    DROP VIEW IF EXISTS bronze.vw_@{item().TableName} \n    GO \n    CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK '@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'PARQUET' \n        ) AS [result] \n    GO",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "SELECT TOP (100) [DETL_extract_mag_familygroupKey]\n,[OrgKey]\n,[mag_sameasphysical]\n,[statuscode]\n,[statuscodelabel]\n,[mag_familygroupsid]\n,[mag_addyapikey]\n,[mag_collectiveimpact]\n,[mag_physical_postcode]\n,[mag_postal_street3]\n,[modifiedon]\n,[mag_postal_city]\n,[mag_sourceguid]\n,[mag_meshblock]\n,[timezoneruleversionnumber]\n,[mag_familygroupnumber]\n,[mag_referralwhanauid]\n,[mag_planwhanauid]\n,[mag_censusareaunit]\n,[mag_statscensusdate]\n,[mag_subordinateorganisationnavigatorname]\n,[owningbusinessunit]\n,[owningbusinessunitname]\n,[createdon]\n,[mag_longitude]\n,[createdonbehalfby]\n,[createdonbehalfbyname]\n,[utcconversiontimezonecode]\n,[mag_deprivationquintile]\n,[traversedpath]\n,[stageid]\n,[mag_physical_city]\n,[mag_physical_country]\n,[mag_postaladdress]\n,[processid]\n,[modifiedby]\n,[modifiedbyname]\n,[statecode]\n,[statecodelabel]\n,[modifiedonbehalfby]\n,[modifiedonbehalfbyname]\n,[owninguser]\n,[owningusername]\n,[mag_latitude]\n,[mag_description]\n,[mag_primarycontact]\n,[createdby]\n,[createdbyname]\n,[mag_postal_country]\n,[mag_name]\n,[ownerid]\n,[owneridname]\n,[mag_physical_stateprovince]\n,[mag_note]\n,[mag_postal_postcode]\n,[mag_referralservice]\n,[mag_postal_stateprovince]\n,[mag_physical_street3]\n,[mag_subordinateorganisationguid]\n,[mag_navigatorid]\n,[mag_navigatoridname]\n,[owningteam]\n,[owningteamname]\n,[mag_familygroupid]\n,[mag_referraldate]\n,[DETL_ExtractDateTime]\n FROM [bronze].[vw_Family]",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/Family/dbo.Family.parquet',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/s1_woca_db_schemas')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -719,12 +659,15 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2a_usp_create_table_views')]",
+			"name": "[concat(parameters('workspaceName'), '/s1_usp_create_table_views')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
+				"folder": {
+					"name": "explore"
+				},
 				"content": {
-					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n",
+					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
 					"metadata": {
 						"language": "sql"
 					},
@@ -739,12 +682,55 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2b_usp_create_external_data_source')]",
+			"name": "[concat(parameters('workspaceName'), '/s2_create_external_data_source')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/bronze/'\n)\nGO\n",
+					"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/bronze/'\n)\nGO\n\n\n-- Then use a Script to write script to create data inside this data source",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s2_explore_individual')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "explore"
+				},
+				"content": {
+					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''Individual/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(contactid)),\nMAX(LEN(mag_agegroupidname)),\nMAX(LEN(gendercodelabel)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_phoregistered)),\nMAX(LEN(mag_ethnicityprimaryid)),\nMAX(LEN(mag_physicaldisability)),\nMAX(LEN(statuscodelabel)),\n*/\nSELECT\n    MAX(LEN(statuscodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n-- Count the number of records when age_group_name is null 8547\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n\n\n\n\n-- Remove rows with the null in any of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in any of the listed columns COUNT: 4725\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\n\n-- Remove rows with the null in all of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in all of the listed columns COUNT: 8605\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "EXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''Individual/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n",
 					"metadata": {
 						"language": "sql"
 					},
