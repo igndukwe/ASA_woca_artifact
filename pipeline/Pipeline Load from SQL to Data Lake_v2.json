@@ -144,11 +144,7 @@
 							"typeProperties": {
 								"scripts": [
 									{
-										"type": "NonQuery",
-										"text": {
-											"value": "CREATE OR ALTER VIEW bronze.vw_@{item().TableName}\nAS\nSELECT *\nFROM OPENROWSET(\n    BULK '@{item().TableName}'\n    DATA_SOURCE = '@{pipeline().parameters.data_src}'\n    FORMAT = 'PARAQUET'\n)\n\n",
-											"type": "Expression"
-										}
+										"type": "NonQuery"
 									}
 								]
 							}
