@@ -39,12 +39,7 @@
 						]
 					}
 				],
-				"userProperties": [
-					{
-						"name": "datasrc",
-						"value": "woca_data_src"
-					}
-				],
+				"userProperties": [],
 				"typeProperties": {
 					"items": {
 						"value": "@activity('Lookup SQL Tables to Export').output.value",
@@ -144,7 +139,11 @@
 							"typeProperties": {
 								"scripts": [
 									{
-										"type": "NonQuery"
+										"type": {
+											"value": "DROP VIEW IF EXISTS bronze.vw_@{item().TableName}\nGO\n\nCREATE VIEW bronze.vw_@{item().TableName}\nAS\nSELECT\n    *\nFROM \n    OPENROWSET(\n        BULK '@{item().TableName}'\n        DATA_SOURCE = '@{pipeline().parameters.datasrc}'\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO",
+											"type": "Expression"
+										},
+										"text": ""
 									}
 								]
 							}
@@ -154,9 +153,9 @@
 			}
 		],
 		"parameters": {
-			"datalakepath": {
+			"datasrc": {
 				"type": "string",
-				"defaultValue": "bronze"
+				"defaultValue": "woca_data_src"
 			}
 		},
 		"folder": {
