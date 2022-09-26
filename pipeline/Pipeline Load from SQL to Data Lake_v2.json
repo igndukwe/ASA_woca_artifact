@@ -41,8 +41,8 @@
 				],
 				"userProperties": [
 					{
-						"name": "datalakepath",
-						"value": "bronze"
+						"name": "datasrc",
+						"value": "woca_data_src"
 					}
 				],
 				"typeProperties": {
@@ -146,7 +146,7 @@
 									{
 										"type": "NonQuery",
 										"text": {
-											"value": "CREATE OR ALTER VIEW bronze.vw_@{item().TableName}\nAS\nSELECT *\nFROM OPENROWSET(\n    BULK '@{item().TableName}'\n    DATA_SOURCE = '@{pipeline().parameters.datalakepath}'\n    FORMAT = 'PARAQUET'\n)\n",
+											"value": "CREATE OR ALTER VIEW bronze.vw_@{item().TableName}\nAS\nSELECT *\nFROM OPENROWSET(\n    BULK '@{item().TableName}'\n    DATA_SOURCE = '@{pipeline().parameters.data_src}'\n    FORMAT = 'PARAQUET'\n)\n\n",
 											"type": "Expression"
 										}
 									}
