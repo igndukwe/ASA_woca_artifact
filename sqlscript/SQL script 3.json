@@ -1,0 +1,20 @@
+{
+	"name": "SQL script 3",
+	"properties": {
+		"folder": {
+			"name": "silver"
+		},
+		"content": {
+			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_individual\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_individual\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "woca_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
