@@ -2,7 +2,7 @@
 	"name": "s2_family_viwe_silver",
 	"properties": {
 		"folder": {
-			"name": "3_step"
+			"name": "3_silver/3_1_views"
 		},
 		"content": {
 			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n\n\n\n\n",
