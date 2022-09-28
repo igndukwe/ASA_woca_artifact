@@ -1,5 +1,5 @@
 {
-	"name": "s3_usp_create_bronze_table_views",
+	"name": "s1_create_bronze_table_views_usp",
 	"properties": {
 		"folder": {
 			"name": "2_bronze"
