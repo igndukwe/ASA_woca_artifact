@@ -1,5 +1,5 @@
 {
-	"name": "s1_woca_db_schemas",
+	"name": "s1_create_woca_db_schemas",
 	"properties": {
 		"folder": {
 			"name": "1_init"
