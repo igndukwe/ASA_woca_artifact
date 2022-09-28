@@ -5,7 +5,7 @@
 			"name": "3_step"
 		},
 		"content": {
-			"query": "-- perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n\n-- count items you have joined \nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n-- count items you have joined \nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n",
+			"query": "-- perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n\n-- count items you have joined \nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n-- count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n",
 			"metadata": {
 				"language": "sql"
 			},
