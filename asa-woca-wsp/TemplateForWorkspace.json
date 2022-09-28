@@ -659,7 +659,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_create_individual_viwe_silver')]",
+			"name": "[concat(parameters('workspaceName'), '/s1_individual_view_silver')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -774,7 +774,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s3_explore_familhy')]",
+			"name": "[concat(parameters('workspaceName'), '/s3_explore_family')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -805,7 +805,7 @@
 					"name": "2_step_explore"
 				},
 				"content": {
-					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(15) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(15) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(15) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
+					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -820,7 +820,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2_create_family_viwe_silver')]",
+			"name": "[concat(parameters('workspaceName'), '/s2_family_viwe_silver')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -843,7 +843,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s3_create_family_membership_viwe_silver_Copy1')]",
+			"name": "[concat(parameters('workspaceName'), '/s3_family_membership_view_silver')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -851,7 +851,30 @@
 					"name": "3_step"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family_membership\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family_membership\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(15) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n\n\n\n",
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family_membership\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family_membership\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_perform_joins')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "3_step"
+				},
+				"content": {
+					"query": "--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n\n--1b count items you have joined \nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n-- 1c. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n-- 2c. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n--3c get the distinct counts of individuals/family were assigned primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n--1d count the number of individuals that belong to each family relationship\n--Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n",
 					"metadata": {
 						"language": "sql"
 					},
