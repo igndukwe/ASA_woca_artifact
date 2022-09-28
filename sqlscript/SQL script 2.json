@@ -1,11 +1,11 @@
 {
-	"name": "ReadMe_4_2",
+	"name": "SQL script 2",
 	"properties": {
 		"folder": {
-			"name": "4_silver/4_2_ext_tables"
+			"name": "1_init"
 		},
 		"content": {
-			"query": "/*\nCreate stored procedure\nthat will use CETAS to create external tables for each of the procedures\n*/",
+			"query": "",
 			"metadata": {
 				"language": "sql"
 			},

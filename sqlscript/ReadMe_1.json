@@ -2,7 +2,7 @@
 	"name": "ReadMe_1",
 	"properties": {
 		"folder": {
-			"name": "1_bronze"
+			"name": "1_init"
 		},
 		"content": {
 			"query": "/*\nStep 1: run 's1_woca_db_schemas' and 's2_create_external_data_source' to create the woca_ldw database (virtual wearhouse)\nStep 2: create a pipeline that fetches the data from the SQL server into our datalake\n- pipeline will also make use of the \"bronze.usp_create_views\" procedure to write views for each table under the bronze schema\n*/",

@@ -2,7 +2,7 @@
 	"name": "s1_individual_usp",
 	"properties": {
 		"folder": {
-			"name": "3_silver/3_3_procedure"
+			"name": "4_silver/4_3_procedure"
 		},
 		"content": {
 			"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_individual\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = nyc_taxi_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT *\n    FROM bronze.vw_Individual;\n\nEND;\n",
