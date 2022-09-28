@@ -644,7 +644,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "1_bronze"
+					"name": "1_init"
 				},
 				"content": {
 					"query": "/*\nStep 1: run 's1_woca_db_schemas' and 's2_create_external_data_source' to create the woca_ldw database (virtual wearhouse)\nStep 2: create a pipeline that fetches the data from the SQL server into our datalake\n- pipeline will also make use of the \"bronze.usp_create_views\" procedure to write views for each table under the bronze schema\n*/",
@@ -667,7 +667,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_1_views"
+					"name": "4_silver/4_1_views"
 				},
 				"content": {
 					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_individual\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_individual\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\n\n\n\n",
@@ -685,12 +685,12 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s3_usp_create_bronze_table_views')]",
+			"name": "[concat(parameters('workspaceName'), '/s1_create_bronze_table_views_usp')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "1_bronze"
+					"name": "2_bronze"
 				},
 				"content": {
 					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
@@ -713,7 +713,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "1_bronze"
+					"name": "1_init"
 				},
 				"content": {
 					"query": "USE master\nGO\n\nCREATE DATABASE woca_ldw\nGO\n\nALTER DATABASE woca_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE woca_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO\n",
@@ -736,7 +736,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "1_bronze"
+					"name": "1_init"
 				},
 				"content": {
 					"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/bronze/'\n)\nGO\n\n\n-- Then use a Script to write script to create data inside this data source",
@@ -759,7 +759,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "2_explore"
+					"name": "3_explore"
 				},
 				"content": {
 					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''Individual/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(contactid)),\nMAX(LEN(mag_agegroupidname)),\nMAX(LEN(gendercodelabel)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_phoregistered)),\nMAX(LEN(mag_ethnicityprimaryid)),\nMAX(LEN(mag_physicaldisability)),\nMAX(LEN(statuscodelabel)),\n*/\nSELECT\n    MAX(LEN(statuscodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n-- Count the number of records when age_group_name is null 8547\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n\n\n\n\n-- Remove rows with the null in any of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in any of the listed columns COUNT: 4725\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\n\n\n-- Remove rows with the null in all of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in all of the listed columns COUNT: 8605\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n",
@@ -782,7 +782,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "2_explore"
+					"name": "3_explore"
 				},
 				"content": {
 					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''Family/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupid)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_physical_postcode)),\nMAX(LEN(mag_physical_city)),\nMAX(LEN(statecodelabel))\n*/\nSELECT\n    MAX(LEN(statecodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupid,\n    mag_primarycontact,\n    mag_physical_postcode,\n    mag_physical_city\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n",
@@ -805,7 +805,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "2_explore"
+					"name": "3_explore"
 				},
 				"content": {
 					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
@@ -828,7 +828,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_1_views"
+					"name": "4_silver/4_1_views"
 				},
 				"content": {
 					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n\n\n\n\n",
@@ -851,7 +851,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_1_views"
+					"name": "4_silver/4_1_views"
 				},
 				"content": {
 					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family_membership\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family_membership\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n\n\n\n",
@@ -874,7 +874,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_1_views"
+					"name": "4_silver/4_1_views"
 				},
 				"content": {
 					"query": "--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n\n--1b count items you have joined \nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n-- 1c. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n-- 2c. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n--3c get the distinct counts of individuals/family were assigned primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n--1d count the number of individuals that belong to each family relationship\n--Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n",
@@ -892,12 +892,12 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/ReadMe_3_1')]",
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_4_1')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_1_views"
+					"name": "4_silver/4_1_views"
 				},
 				"content": {
 					"query": "/*\nWe can create a dynamic PIPELINE that will create (individual, family_membership and family) SILVER VIES/EXTERNAL TABLES\n*/",
@@ -915,12 +915,12 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/ReadMe_3_2')]",
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_4_2')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_2_ext_tables"
+					"name": "4_silver/4_2_ext_tables"
 				},
 				"content": {
 					"query": "/*\nCreate stored procedure\nthat will use CETAS to create external tables for each of the procedures\n*/",
@@ -943,7 +943,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_2_ext_tables"
+					"name": "4_silver/4_2_ext_tables"
 				},
 				"content": {
 					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual\nGO\n\nCREATE EXTERNAL TABLE silver.Individual\n    WITH\n    (\n        DATA_SOURCE = nyc_taxi_src,\n        LOCATION = 'silver/Individual',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT *\n  FROM bronze.vw_Individual;\n\n\n SELECT * FROM silver.individual;",
@@ -966,7 +966,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_3_procedure"
+					"name": "4_silver/4_3_procedure"
 				},
 				"content": {
 					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_individual\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = nyc_taxi_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT *\n    FROM bronze.vw_Individual;\n\nEND;\n",
@@ -975,6 +975,52 @@
 					},
 					"currentConnection": {
 						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s3_create_external_file_formats')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "1_init"
+				},
+				"content": {
+					"query": "USE nyc_taxi_ldw;\n\n\n/*\nCSV EXTERNAL FILE FORMATS\n==========================\n*/\n--1a. Create file format csv_file_format for parser version 2.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='csv_file_format_pv2')\n  CREATE EXTERNAL FILE FORMAT csv_file_format_pv2  \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = ','  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '2.0' )   \n      );  \n\n--DROP EXTERNAL FILE FORMAT csv_file_format_v2\n\n--2a Create file format csv_file_format_pv1 for parser version 1.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='csv_file_format_pv1')\n  CREATE EXTERNAL FILE FORMAT csv_file_format_pv1 \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = ','  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '1.0' )   \n      );  \n\n\n/*\nTSV EXTERNAL FILE FORMATS\n==========================\n*/\n--1b. Create file format tsv_file_format for parser version 2.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='tsv_file_format_pv2')\n  CREATE EXTERNAL FILE FORMAT tsv_file_format_pv2  \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = '\\t'  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '2.0' )   \n      );  \n\n--2b. Create file format tsv_file_format for parser version 1.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='tsv_file_format_pv1')\n  CREATE EXTERNAL FILE FORMAT tsv_file_format_pv1 \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = '\\t'  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '1.0' )   \n      );  \n\n\n\n/*\nPARQUET EXTERNAL FILE FORMATS\n=============================\n*/\n--1c. Create external file format for parquet_file_format\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='parquet_file_format')\n  CREATE EXTERNAL FILE FORMAT parquet_file_format  \n  WITH (  \n        FORMAT_TYPE = PARQUET,  \n        DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'  \n       ); \n\n\n\n/*\nDELTA EXTERNAL FILE FORMATS\n===========================\n*/\n--1d. Create external file format for delta_file_format\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='delta_file_format')\n  CREATE EXTERNAL FILE FORMAT delta_file_format  \n  WITH (  \n        FORMAT_TYPE = DELTA,  \n        DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'  \n       ); \n\n\n\n\n\n\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "1_init"
+				},
+				"content": {
+					"query": "",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
