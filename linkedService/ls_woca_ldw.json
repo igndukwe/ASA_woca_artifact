@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "AzureSqlDW",
 		"typeProperties": {
-			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:asa-woca-wsp-ondemand.sql.azuresynapse.net,1433;Initial Catalog=woca_ldw"
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=asa-woca-wsp-ondemand.sql.azuresynapse.net;Initial Catalog=woca_ldw"
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
