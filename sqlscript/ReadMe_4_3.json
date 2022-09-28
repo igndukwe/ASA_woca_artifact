@@ -1,0 +1,20 @@
+{
+	"name": "ReadMe_4_3",
+	"properties": {
+		"folder": {
+			"name": "4_silver/4_3_procedure"
+		},
+		"content": {
+			"query": "/*\nCreate stored procedure\nthat will use CETAS to create external tables for each of the procedures\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
