@@ -1,0 +1,20 @@
+{
+	"name": "SQL script 3",
+	"properties": {
+		"folder": {
+			"name": "4_step"
+		},
+		"content": {
+			"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.individual\nGO\n\nCREATE EXTERNAL TABLE silver.individual\n    WITH\n    (\n        DATA_SOURCE = nyc_taxi_src,\n        LOCATION = 'silver/individual',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT *\n  FROM bronze.vw_individual;\n\n\n SELECT * FROM silver.individual;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "woca_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

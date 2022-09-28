@@ -1,0 +1,20 @@
+{
+	"name": "ReadMe3",
+	"properties": {
+		"folder": {
+			"name": "3_step"
+		},
+		"content": {
+			"query": "/*\nWe can create a dynamic PIPELINE that will create (individual, family_membership and family) SILVER VIES/EXTERNAL TABLES\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
