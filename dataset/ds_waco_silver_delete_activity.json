@@ -1,12 +1,13 @@
 {
-	"name": "ds_woca_dl",
+	"name": "ds_waco_silver_delete_activity",
 	"properties": {
+		"description": "This is the dataset that points to the silver path where we want to delete listed files in the data lake. We have also assigned dataset a folder_path_param parameter with no values because we want it to be updated with variables from other sources.",
 		"linkedServiceName": {
 			"referenceName": "ls_woca_dl",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"datalakefolder": {
+			"folder_path_param": {
 				"type": "string"
 			}
 		},
@@ -16,7 +17,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": {
-					"value": "bronze/@{dataset().datalakefolder}",
+					"value": "@dataset().folder_path_param",
 					"type": "Expression"
 				},
 				"fileSystem": "woca-data"
@@ -24,6 +25,5 @@
 			"compressionCodec": "snappy"
 		},
 		"schema": []
-	},
-	"type": "Microsoft.Synapse/workspaces/datasets"
+	}
 }

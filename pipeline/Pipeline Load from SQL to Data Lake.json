@@ -154,7 +154,7 @@
 			}
 		],
 		"folder": {
-			"name": "Ingest4mSQL2DataLake/old"
+			"name": "old"
 		},
 		"annotations": [],
 		"lastPublishTime": "2022-09-26T05:16:23Z"

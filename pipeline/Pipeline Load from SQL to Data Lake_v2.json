@@ -1,6 +1,7 @@
 {
 	"name": "Pipeline Load from SQL to Data Lake_v2",
 	"properties": {
+		"description": "Uses an SQL to query the tables from a particular schema from a remote database and parse the output values containing a list of 'SchemaName' and 'TableName' as input for each of the copy activity and script to use to write the tables to the data lake",
 		"activities": [
 			{
 				"name": "Lookup SQL Tables to Export",
@@ -48,7 +49,7 @@
 					"batchCount": 5,
 					"activities": [
 						{
-							"name": "Copy data from SQL to Data Lake",
+							"name": "Copy tables to Data Lake",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -118,7 +119,7 @@
 							"type": "Script",
 							"dependsOn": [
 								{
-									"activity": "Copy data from SQL to Data Lake",
+									"activity": "Copy tables to Data Lake",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -164,9 +165,6 @@
 				"type": "string",
 				"defaultValue": "woca_data_src"
 			}
-		},
-		"folder": {
-			"name": "Ingest4mSQL2DataLake"
 		},
 		"annotations": [],
 		"lastPublishTime": "2022-09-26T05:16:30Z"
