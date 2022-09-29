@@ -33,7 +33,7 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('workspaceName'), '/Pipeline Create Silver Tables')]",
+			"name": "[concat(parameters('workspaceName'), '/pl_create_silver_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -149,7 +149,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_load_data_4m_SQL_2_dl')]",
+			"name": "[concat(parameters('workspaceName'), '/pl_load_data_4m_db_2_dl_v1')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -204,7 +204,7 @@
 							"batchCount": 5,
 							"activities": [
 								{
-									"name": "Copy data to Data Lake",
+									"name": "cp_data_dl",
 									"description": "Copy the data from database selected table/view to the data lake (source to sink).",
 									"type": "Copy",
 									"dependsOn": [],
@@ -271,12 +271,12 @@
 									]
 								},
 								{
-									"name": "Create View",
-									"description": "Calls a stored procedure 'bronze.usp_create_views' to generate views/tables. NOTE: data hast to be copied into the data lake before views/tables can be created.",
+									"name": "crt_vw_dlw",
+									"description": "Calls a stored procedure 'bronze.usp_create_views' to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
 									"type": "SqlServerStoredProcedure",
 									"dependsOn": [
 										{
-											"activity": "Copy data to Data Lake",
+											"activity": "cp_data_dl",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -329,7 +329,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Pipeline Load from SQL to Data Lake_v2')]",
+			"name": "[concat(parameters('workspaceName'), '/pl_load_data_4m_db_2_dl_v2')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -384,7 +384,7 @@
 							"batchCount": 5,
 							"activities": [
 								{
-									"name": "Copy data to Data Lake",
+									"name": "cp_data_dl",
 									"description": "Copy the data from database selected table/view to the data lake (source to sink).",
 									"type": "Copy",
 									"dependsOn": [],
@@ -451,12 +451,12 @@
 									]
 								},
 								{
-									"name": "Create Views",
-									"description": "Calls a stored procedure 'bronze.usp_create_views' to generate views/tables. NOTE: data hast to be copied into the data lake before views/tables can be created.",
+									"name": "crt_vw_dlw",
+									"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
 									"type": "Script",
 									"dependsOn": [
 										{
-											"activity": "Copy data to Data Lake",
+											"activity": "cp_data_dl",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -713,7 +713,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "Pipeline Load from SQL to Data Lake_v2",
+							"referenceName": "pl_load_data_4m_db_2_dl_v2",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -731,7 +731,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/Pipeline Load from SQL to Data Lake_v2')]"
+				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]"
 			]
 		},
 		{
@@ -1281,7 +1281,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"name": "[concat(parameters('workspaceName'), '/merge_individual_family_')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1312,7 +1312,7 @@
 					"name": "2_bronze"
 				},
 				"content": {
-					"query": "/*\nThis is the procedure that the Stored procedure in the 'Pipelines/old/pl_load_data_4m_SQL_2_dl' pipeline \ncalls in order to create views in the data lake gen2 virtual data wearhouse\n*/",
+					"query": "/*\nThis is the procedure that the Stored procedure in the 'Pipelines/old/pl_load_data_4m_SQL_2_dl_v1' pipeline \ncalls in order to create views in the data lake gen2 virtual data wearhouse\n*/",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1321,6 +1321,76 @@
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_overall_execution')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline to extract data from db",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_data_4m_db_2_dl_v2",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Pipeline to create silver tbls",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline to extract data from db",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_create_silver_tbl",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "5_gold"
+				},
+				"content": {
+					"metadata": {
+						"language": "sql"
+					}
 				},
 				"type": "SqlQuery"
 			},
