@@ -5,7 +5,7 @@
 			"name": "1_init"
 		},
 		"content": {
-			"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/bronze/'\n)\nGO\n\n\n-- Then use a Script to write script to create data inside this data source",
+			"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/'\n)\nGO\n\n\n-- Then use a Script to write script to create data inside this data source\n\n\n--DROP EXTERNAL DATA SOURCE woca_data_src; ",
 			"metadata": {
 				"language": "sql"
 			},
