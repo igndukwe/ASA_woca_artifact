@@ -17,6 +17,7 @@
 					"activities": [
 						{
 							"name": "Stored procedure",
+							"description": "Creates dataset for the listed names in the silver path and create externa tables",
 							"type": "SqlServerStoredProcedure",
 							"dependsOn": [
 								{
@@ -47,6 +48,7 @@
 						},
 						{
 							"name": "Delete Silver Files",
+							"description": "Delete all the listed files from the silver path in the data lake",
 							"type": "Delete",
 							"dependsOn": [],
 							"policy": {
