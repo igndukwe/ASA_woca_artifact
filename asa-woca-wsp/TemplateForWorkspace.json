@@ -810,7 +810,7 @@
 					"name": "4_silver/4_3_procedure"
 				},
 				"content": {
-					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_individual\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = nyc_taxi_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT *\n    FROM bronze.vw_Individual;\n\nEND;\n",
+					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_calendar\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual;\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    --SELECT * FROM bronze.vw_Individual;\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Individual/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            individual_id VARCHAR(50) 77,\n            age_group_name VARCHAR(50) 61,\n            gender_code_label VARCHAR(50) 69,\n            date_of_birth VARCHAR(50) 103,\n            tribe_primary_name VARCHAR(100) 90,\n            pho_registered BIT 157,\n            primary_ethnicity VARCHAR(50) 46,\n            physical_disability BIT 81,\n            status_code_label VARCHAR(20) 22\n        ) AS [individuals]\n    WHERE \n        age_group_name IS NOT NULL OR\n        gender_code_label IS NOT NULL OR\n        date_of_birth IS NOT NULL OR\n        tribe_primary_name IS NOT NULL OR\n        primary_ethnicity IS NOT NULL;\n\nEND;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1086,7 +1086,30 @@
 					"name": "4_silver/4_2_ext_tables"
 				},
 				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Family') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Family\nGO\n\nCREATE EXTERNAL TABLE silver.Family\n    WITH\n    (\n        DATA_SOURCE = nyc_taxi_src,\n        LOCATION = 'silver/Family',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT *\n  FROM bronze.vw_Family;\n\n\n SELECT * FROM silver.Family;",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Family') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Family\nGO\n\nCREATE EXTERNAL TABLE silver.Family\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/Family',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_Family;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n SELECT * FROM silver.Family;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s1_individual_usp_Copy1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_silver/4_3_procedure"
+				},
+				"content": {
+					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_calendar\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual;\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    --SELECT * FROM bronze.vw_Individual;\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Individual/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            individual_id VARCHAR(50) 77,\n            age_group_name VARCHAR(50) 61,\n            gender_code_label VARCHAR(50) 69,\n            date_of_birth VARCHAR(50) 103,\n            tribe_primary_name VARCHAR(100) 90,\n            pho_registered BIT 157,\n            primary_ethnicity VARCHAR(50) 46,\n            physical_disability BIT 81,\n            status_code_label VARCHAR(20) 22\n        ) AS [individuals]\n    WHERE \n        age_group_name IS NOT NULL OR\n        gender_code_label IS NOT NULL OR\n        date_of_birth IS NOT NULL OR\n        tribe_primary_name IS NOT NULL OR\n        primary_ethnicity IS NOT NULL;\n\nEND;\n",
 					"metadata": {
 						"language": "sql"
 					},
