@@ -1,10 +1,11 @@
 {
 	"name": "pl_load_data_4m_SQL_2_dl",
 	"properties": {
-		"description": "This pipeline loads the tables/views from the odb schema from an SQL data base into the data lake.",
+		"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 		"activities": [
 			{
 				"name": "Lookup SQL Tables to Export",
+				"description": "Looks up the database to select a list of tables/views from the dbo schema",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -31,6 +32,7 @@
 			},
 			{
 				"name": "For Each Table",
+				"description": "For each of the output values ('SchemaName' and 'TableName') from the lookup table, perform two activities.",
 				"type": "ForEach",
 				"dependsOn": [
 					{

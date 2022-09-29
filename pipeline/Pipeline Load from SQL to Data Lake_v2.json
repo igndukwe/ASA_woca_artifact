@@ -1,10 +1,11 @@
 {
 	"name": "Pipeline Load from SQL to Data Lake_v2",
 	"properties": {
-		"description": "Uses an SQL to query the tables from a particular schema from a remote database and parse the output values containing a list of 'SchemaName' and 'TableName' as input for each of the copy activity and script to use to write the tables to the data lake",
+		"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 		"activities": [
 			{
 				"name": "Lookup SQL Tables to Export",
+				"description": "Looks up the database to select a list of tables/views from the dbo schema",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -31,6 +32,7 @@
 			},
 			{
 				"name": "For Each Table",
+				"description": "For each of the output values ('SchemaName' and 'TableName') from the lookup table, perform two activities.",
 				"type": "ForEach",
 				"dependsOn": [
 					{
