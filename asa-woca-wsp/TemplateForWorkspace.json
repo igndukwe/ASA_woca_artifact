@@ -641,29 +641,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/3_create_external_file_formats')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "1_init"
-				},
-				"content": {
-					"query": "USE nyc_taxi_ldw;\n\n\n/*\nCSV EXTERNAL FILE FORMATS\n==========================\n*/\n--1a. Create file format csv_file_format for parser version 2.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='csv_file_format_pv2')\n  CREATE EXTERNAL FILE FORMAT csv_file_format_pv2  \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = ','  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '2.0' )   \n      );  \n\n--DROP EXTERNAL FILE FORMAT csv_file_format_v2\n\n--2a Create file format csv_file_format_pv1 for parser version 1.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='csv_file_format_pv1')\n  CREATE EXTERNAL FILE FORMAT csv_file_format_pv1 \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = ','  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '1.0' )   \n      );  \n\n\n/*\nTSV EXTERNAL FILE FORMATS\n==========================\n*/\n--1b. Create file format tsv_file_format for parser version 2.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='tsv_file_format_pv2')\n  CREATE EXTERNAL FILE FORMAT tsv_file_format_pv2  \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = '\\t'  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '2.0' )   \n      );  \n\n--2b. Create file format tsv_file_format for parser version 1.0\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='tsv_file_format_pv1')\n  CREATE EXTERNAL FILE FORMAT tsv_file_format_pv1 \n  WITH (  \n      FORMAT_TYPE = DELIMITEDTEXT,\n      FORMAT_OPTIONS (  \n        FIELD_TERMINATOR = '\\t'  \n      , STRING_DELIMITER = '\"'\n      , First_Row = 2\n      , USE_TYPE_DEFAULT = FALSE \n      , Encoding = 'UTF8'\n      , PARSER_VERSION = '1.0' )   \n      );  \n\n\n\n/*\nPARQUET EXTERNAL FILE FORMATS\n=============================\n*/\n--1c. Create external file format for parquet_file_format\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='parquet_file_format')\n  CREATE EXTERNAL FILE FORMAT parquet_file_format  \n  WITH (  \n        FORMAT_TYPE = PARQUET,  \n        DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'  \n       ); \n\n\n\n/*\nDELTA EXTERNAL FILE FORMATS\n===========================\n*/\n--1d. Create external file format for delta_file_format\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name ='delta_file_format')\n  CREATE EXTERNAL FILE FORMAT delta_file_format  \n  WITH (  \n        FORMAT_TYPE = DELTA,  \n        DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'  \n       ); \n\n\n\n\n\n\n\n\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/ReadMe_1')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -742,29 +719,6 @@
 				},
 				"content": {
 					"query": "/*\n1st Create stored procedure that will use CETAS to create external tables for each of the procedures\n2nd run each procedure before we can use them\n*/",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "1_init"
-				},
-				"content": {
-					"query": "",
 					"metadata": {
 						"language": "sql"
 					},
