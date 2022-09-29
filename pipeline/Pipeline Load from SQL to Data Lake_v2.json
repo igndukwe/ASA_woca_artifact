@@ -52,6 +52,7 @@
 					"activities": [
 						{
 							"name": "Copy data to Data Lake",
+							"description": "Copy the data from database selected table/view to the data lake (source to sink).",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -118,6 +119,7 @@
 						},
 						{
 							"name": "Create Views",
+							"description": "Calls a stored procedure 'bronze.usp_create_views' to generate views/tables. NOTE: data hast to be copied into the data lake before views/tables can be created.",
 							"type": "Script",
 							"dependsOn": [
 								{
