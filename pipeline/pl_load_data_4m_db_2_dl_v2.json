@@ -1,5 +1,5 @@
 {
-	"name": "Pipeline Load from SQL to Data Lake_v2",
+	"name": "pl_load_data_4m_db_2_dl_v2",
 	"properties": {
 		"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 		"activities": [
@@ -119,7 +119,7 @@
 						},
 						{
 							"name": "Create Views",
-							"description": "Calls a stored procedure 'bronze.usp_create_views' to generate views/tables. NOTE: data hast to be copied into the data lake before views/tables can be created.",
+							"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
 							"type": "Script",
 							"dependsOn": [
 								{

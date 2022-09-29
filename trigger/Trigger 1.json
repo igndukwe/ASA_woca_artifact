@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "Pipeline Load from SQL to Data Lake_v2",
+					"referenceName": "pl_load_data_4m_db_2_dl_v2",
 					"type": "PipelineReference"
 				}
 			}
