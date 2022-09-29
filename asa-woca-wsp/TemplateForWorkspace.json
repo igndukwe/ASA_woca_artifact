@@ -1168,6 +1168,121 @@
 				"type": "SqlQuery"
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Pipeline Create Silver Tables')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "This pipeline first deletes all the listed file paths in the data lake silver path if they exist then it recreates the listed external tables which in turn recreates listed files in their subfolders within the silver path  ",
+				"activities": [
+					{
+						"name": "ForEach Folder Path",
+						"description": "For each of the listed 'folder_path' and 'usp_name' in the main 'folder_path_usp_name_array' variable we will perform a delete and procedure activity ",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('folder_path_usp_name_array')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Delete silver woca data",
+									"description": "This activity deletes all the silver files from the data lake gen2 silver path",
+									"type": "Delete",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "ds_woca_dl",
+											"type": "DatasetReference",
+											"parameters": {
+												"datalakefolder": {
+													"value": "@item().folder_path",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "Stored procedure",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Delete silver woca data",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": {
+											"value": "@item().usp_name",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_woca_ldw",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"folder_path_usp_name_array": {
+						"type": "Array",
+						"defaultValue": [
+							{
+								"folder_path": "silver/Individual",
+								"usp_name": "silver.usp_silver_individual"
+							},
+							{
+								"folder_path": "silver/FamilyMembership",
+								"usp_name": "silver.usp_silver_family_membership"
+							},
+							{
+								"folder_path": "silver/Family",
+								"usp_name": "silver.usp_silver_family"
+							}
+						]
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]"
+			]
 		}
 	]
 }
