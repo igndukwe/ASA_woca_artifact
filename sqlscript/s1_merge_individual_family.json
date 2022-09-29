@@ -1,8 +1,8 @@
 {
-	"name": "SQL script 1",
+	"name": "s1_merge_individual_family",
 	"properties": {
 		"folder": {
-			"name": "5_gold"
+			"name": "4_gold"
 		},
 		"content": {
 			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n",
@@ -10,7 +10,7 @@
 				"language": "sql"
 			},
 			"currentConnection": {
-				"databaseName": "master",
+				"databaseName": "woca_ldw",
 				"poolName": "Built-in"
 			},
 			"resultLimit": 5000
