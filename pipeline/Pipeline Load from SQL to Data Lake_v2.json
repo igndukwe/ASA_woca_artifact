@@ -51,7 +51,7 @@
 					"batchCount": 5,
 					"activities": [
 						{
-							"name": "Copy tables to Data Lake",
+							"name": "Copy data to Data Lake",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -121,7 +121,7 @@
 							"type": "Script",
 							"dependsOn": [
 								{
-									"activity": "Copy tables to Data Lake",
+									"activity": "Copy data to Data Lake",
 									"dependencyConditions": [
 										"Succeeded"
 									]
