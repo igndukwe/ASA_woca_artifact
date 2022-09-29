@@ -786,7 +786,7 @@
 					"name": "4_silver/4_1_views"
 				},
 				"content": {
-					"query": "/*\nWe can create a dynamic PIPELINE that will create (individual, family_membership and family) SILVER VIES/EXTERNAL TABLES\n*/",
+					"query": "/*\nWe can create a dynamic PIPELINE that will create (individual, family_membership and family) SILVER VIES\n- However, we will be creating EXTERNAL TABLES in '4_2_ext_tables' and using them\n*/",
 					"metadata": {
 						"language": "sql"
 					},
