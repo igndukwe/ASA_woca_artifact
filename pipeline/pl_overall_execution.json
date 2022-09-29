@@ -1,0 +1,41 @@
+{
+	"name": "pl_overall_execution",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute Pipeline to extract data from db",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_load_data_4m_db_2_dl_v2",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Execute Pipeline to create silver tbls",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline to extract data from db",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_create_silver_tbl",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": []
+	}
+}

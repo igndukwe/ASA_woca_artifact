@@ -1,5 +1,5 @@
 {
-	"name": "pl_load_data_4m_db_2_dl_v2",
+	"name": "pl_load_data_4m_db_2_dl_v1",
 	"properties": {
 		"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 		"activities": [
@@ -119,8 +119,8 @@
 						},
 						{
 							"name": "crt_vw_dlw",
-							"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
-							"type": "Script",
+							"description": "Calls a stored procedure 'bronze.usp_create_views' to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
+							"type": "SqlServerStoredProcedure",
 							"dependsOn": [
 								{
 									"activity": "cp_data_dl",
@@ -137,41 +137,32 @@
 								"secureInput": false
 							},
 							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[bronze].[usp_create_views]",
+								"storedProcedureParameters": {
+									"folder": {
+										"value": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
 							"linkedServiceName": {
 								"referenceName": "ls_woca_ldw",
 								"type": "LinkedServiceReference"
-							},
-							"typeProperties": {
-								"scripts": [
-									{
-										"type": "NonQuery",
-										"text": {
-											"value": "DROP VIEW IF EXISTS bronze.vw_@{item().TableName};",
-											"type": "Expression"
-										}
-									},
-									{
-										"type": "NonQuery",
-										"text": {
-											"value": "CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK 'bronze/@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'PARQUET' \n        ) AS [result];",
-											"type": "Expression"
-										}
-									}
-								]
 							}
 						}
 					]
 				}
 			}
 		],
-		"parameters": {
-			"datasrc": {
-				"type": "string",
-				"defaultValue": "woca_data_src"
-			}
+		"folder": {
+			"name": "old"
 		},
 		"annotations": [],
-		"lastPublishTime": "2022-09-26T05:16:30Z"
+		"lastPublishTime": "2022-09-26T05:16:23Z"
 	},
 	"type": "Microsoft.Synapse/workspaces/pipelines"
 }
