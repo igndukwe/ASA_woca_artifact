@@ -33,6 +33,120 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('workspaceName'), '/Pipeline Create Silver Tables')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "This pipeline first deletes all the listed file paths in the data lake silver path if they exist then it recreates the listed external tables which in turn recreates listed files in their subfolders within the silver path  ",
+				"activities": [
+					{
+						"name": "ForEach Folder Path",
+						"description": "For each of the listed 'folder_path' and 'usp_name' in the main 'folder_path_usp_name_array' variable we will perform a delete and procedure activity ",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('folder_path_usp_name_array')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Stored procedure",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Delete Silver Files",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": {
+											"value": "@item().usp_name",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_woca_ldw",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Delete Silver Files",
+									"type": "Delete",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "ds_waco_silver_delete_activity",
+											"type": "DatasetReference",
+											"parameters": {
+												"folder_path_param": {
+													"value": "@item().folder_path",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"folder_path_usp_name_array": {
+						"type": "Array",
+						"defaultValue": [
+							{
+								"folder_path": "silver/Individual",
+								"usp_name": "silver.usp_silver_individual"
+							},
+							{
+								"folder_path": "silver/FamilyMembership",
+								"usp_name": "silver.usp_silver_family_membership"
+							},
+							{
+								"folder_path": "silver/Family",
+								"usp_name": "silver.usp_silver_family"
+							}
+						]
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_waco_silver_delete_activity')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Pipeline Load from SQL to Data Lake')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -195,7 +309,7 @@
 					"cancelAfter": {}
 				},
 				"folder": {
-					"name": "Ingest4mSQL2DataLake/old"
+					"name": "old"
 				},
 				"annotations": [],
 				"lastPublishTime": "2022-09-26T05:16:23Z"
@@ -212,6 +326,7 @@
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
+				"description": "Uses an SQL to query the tables from a particular schema from a remote database and parse the output values containing a list of 'SchemaName' and 'TableName' as input for each of the copy activity and script to use to write the tables to the data lake",
 				"activities": [
 					{
 						"name": "Lookup SQL Tables to Export",
@@ -260,7 +375,7 @@
 							"batchCount": 5,
 							"activities": [
 								{
-									"name": "Copy data from SQL to Data Lake",
+									"name": "Copy tables to Data Lake",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -330,7 +445,7 @@
 									"type": "Script",
 									"dependsOn": [
 										{
-											"activity": "Copy data from SQL to Data Lake",
+											"activity": "Copy tables to Data Lake",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -380,9 +495,6 @@
 						"type": "string",
 						"defaultValue": "woca_data_src"
 					}
-				},
-				"folder": {
-					"name": "Ingest4mSQL2DataLake"
 				},
 				"annotations": [],
 				"lastPublishTime": "2022-09-26T05:16:30Z"
@@ -470,7 +582,7 @@
 							"value": "bronze/@{dataset().datalakefolder}",
 							"type": "Expression"
 						},
-						"fileSystem": "asa-woca-adlfs-wsp-cnt"
+						"fileSystem": "woca-data"
 					},
 					"compressionCodec": "snappy"
 				},
@@ -741,7 +853,7 @@
 					"name": "2_bronze"
 				},
 				"content": {
-					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
+					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
 					"metadata": {
 						"language": "sql"
 					},
@@ -765,6 +877,98 @@
 				},
 				"content": {
 					"query": "USE master\nGO\n\nCREATE DATABASE woca_ldw\nGO\n\nALTER DATABASE woca_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE woca_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s1_family')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_silver/4_2_ext_tables"
+				},
+				"content": {
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Family') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Family\nGO\n\nCREATE EXTERNAL TABLE silver.Family\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/Family',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_Family;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n SELECT * FROM silver.Family;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s1_family_membership')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_silver/4_2_ext_tables"
+				},
+				"content": {
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\nGO\n\nCREATE EXTERNAL TABLE silver.FamilyMembership\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/FamilyMembership',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_FamilyMembership;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMembership]\nGO\n\n\nSELECT * FROM silver.FamilyMembership;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s1_family_membership_usp')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_silver/4_3_procedure"
+				},
+				"content": {
+					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family_membership\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\n\n    CREATE EXTERNAL TABLE silver.FamilyMembership\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/FamilyMembership',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/FamilyMembership/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_membership_id VARCHAR(50) 15,\n            individual VARCHAR(50) 25,\n            family VARCHAR(50) 10,\n            primary_contact VARCHAR(10) 17,\n            family_relationship VARCHAR(20) 4,\n            family_relationship_label VARCHAR(20) 5\n        ) AS [familyMembership];\n\nEND;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s1_family_usp')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_silver/4_3_procedure"
+				},
+				"content": {
+					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family\nAS\nBEGIN\n\n        IF OBJECT_ID('silver.Family') IS NOT NULL\n        DROP EXTERNAL TABLE silver.Family\n\n    CREATE EXTERNAL TABLE silver.Family\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Family',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Family/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_id VARCHAR(50) 64,\n            primary_contact VARCHAR(50) 46,\n            postcode VARCHAR(15) 9,\n            city VARCHAR(50) 32,\n            state_code_label VARCHAR(20) 39\n        ) AS [family];\n\nEND;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -848,29 +1052,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_woca_db_schemas')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "1_init"
-				},
-				"content": {
-					"query": "USE master\nGO\n\nCREATE DATABASE woca_ldw\nGO\n\nALTER DATABASE woca_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE woca_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/s2_create_external_data_source')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -879,7 +1060,7 @@
 					"name": "1_init"
 				},
 				"content": {
-					"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://asa-woca-adlfs-wsp-cnt@asawocastaccdl.dfs.core.windows.net/'\n)\nGO\n\n\n-- Then use a Script to write script to create data inside this data source\n\n--DROP EXTERNAL DATA SOURCE woca_data_src",
+					"query": "-- Switch to the right database\nUSE woca_ldw\nGO\n\n-- Create External Data Source\nCREATE EXTERNAL DATA SOURCE woca_data_src \nWITH (\n    LOCATION = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net'\n    \n)\nGO\n\n\n-- Then use a Script to write script to create data inside this data source\n\n--DROP EXTERNAL DATA SOURCE woca_data_src",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1017,7 +1198,7 @@
 					"name": "2_bronze"
 				},
 				"content": {
-					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
+					"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1078,210 +1259,37 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_family')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"name": "[concat(parameters('workspaceName'), '/ds_waco_silver_delete_activity')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
-				"folder": {
-					"name": "4_silver/4_2_ext_tables"
+				"description": "This is the dataset that points to the silver path where we want to delete listed files in the data lake. We have also assigned dataset a folder_path_param parameter with no values because we want it to be updated with variables from other sources.",
+				"linkedServiceName": {
+					"referenceName": "ls_woca_dl",
+					"type": "LinkedServiceReference"
 				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Family') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Family\nGO\n\nCREATE EXTERNAL TABLE silver.Family\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/Family',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_Family;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n SELECT * FROM silver.Family;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s1_family_usp')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_silver/4_3_procedure"
-				},
-				"content": {
-					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family\nAS\nBEGIN\n\n        IF OBJECT_ID('silver.Family') IS NOT NULL\n        DROP EXTERNAL TABLE silver.Family\n\n    CREATE EXTERNAL TABLE silver.Family\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Family',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Family/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_id VARCHAR(50) 64,\n            primary_contact VARCHAR(50) 46,\n            postcode VARCHAR(15) 9,\n            city VARCHAR(50) 32,\n            state_code_label VARCHAR(20) 39\n        ) AS [family];\n\nEND;\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s1_family_membership')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_silver/4_2_ext_tables"
-				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\nGO\n\nCREATE EXTERNAL TABLE silver.FamilyMembership\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/FamilyMembership',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_FamilyMembership;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMembership]\nGO\n\n\nSELECT * FROM silver.FamilyMembership;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s1_family_membership_usp')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_silver/4_3_procedure"
-				},
-				"content": {
-					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family_membership\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\n\n    CREATE EXTERNAL TABLE silver.FamilyMembership\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/FamilyMembership',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/FamilyMembership/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_membership_id VARCHAR(50) 15,\n            individual VARCHAR(50) 25,\n            family VARCHAR(50) 10,\n            primary_contact VARCHAR(10) 17,\n            family_relationship VARCHAR(20) 4,\n            family_relationship_label VARCHAR(20) 5\n        ) AS [familyMembership];\n\nEND;\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/Pipeline Create Silver Tables')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "This pipeline first deletes all the listed file paths in the data lake silver path if they exist then it recreates the listed external tables which in turn recreates listed files in their subfolders within the silver path  ",
-				"activities": [
-					{
-						"name": "ForEach Folder Path",
-						"description": "For each of the listed 'folder_path' and 'usp_name' in the main 'folder_path_usp_name_array' variable we will perform a delete and procedure activity ",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@variables('folder_path_usp_name_array')",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Delete silver woca data",
-									"description": "This activity deletes all the silver files from the data lake gen2 silver path",
-									"type": "Delete",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "ds_woca_dl",
-											"type": "DatasetReference",
-											"parameters": {
-												"datalakefolder": {
-													"value": "@item().folder_path",
-													"type": "Expression"
-												}
-											}
-										},
-										"enableLogging": false,
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "Stored procedure",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "Delete silver woca data",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": {
-											"value": "@item().usp_name",
-											"type": "Expression"
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "ls_woca_ldw",
-										"type": "LinkedServiceReference"
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"variables": {
-					"folder_path_usp_name_array": {
-						"type": "Array",
-						"defaultValue": [
-							{
-								"folder_path": "silver/Individual",
-								"usp_name": "silver.usp_silver_individual"
-							},
-							{
-								"folder_path": "silver/FamilyMembership",
-								"usp_name": "silver.usp_silver_family_membership"
-							},
-							{
-								"folder_path": "silver/Family",
-								"usp_name": "silver.usp_silver_family"
-							}
-						]
+				"parameters": {
+					"folder_path_param": {
+						"type": "string"
 					}
 				},
-				"annotations": []
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folder_path_param",
+							"type": "Expression"
+						},
+						"fileSystem": "woca-data"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]",
-				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]"
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_dl')]"
 			]
 		}
 	]
