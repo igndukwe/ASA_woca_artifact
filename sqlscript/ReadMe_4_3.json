@@ -5,7 +5,7 @@
 			"name": "4_silver/4_3_procedure"
 		},
 		"content": {
-			"query": "/*\nCreate stored procedure\nthat will use CETAS to create external tables for each of the procedures\n*/",
+			"query": "/*\n1st Create stored procedure that will use CETAS to create external tables for each of the procedures\n2nd run each procedure before we can use them\n*/",
 			"metadata": {
 				"language": "sql"
 			},
