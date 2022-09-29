@@ -1,0 +1,20 @@
+{
+	"name": "ReadMe_2",
+	"properties": {
+		"folder": {
+			"name": "2_bronze"
+		},
+		"content": {
+			"query": "/*\nThis is the procedure that the 'Pipelines/old/Pipeline Load from SQL to Data Lake' pipeline can use\n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

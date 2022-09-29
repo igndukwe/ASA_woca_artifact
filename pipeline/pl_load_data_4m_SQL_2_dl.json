@@ -1,6 +1,7 @@
 {
-	"name": "Pipeline Load from SQL to Data Lake",
+	"name": "pl_load_data_4m_SQL_2_dl",
 	"properties": {
+		"description": "This pipeline loads the tables/views from the odb schema from an SQL data base into the data lake.",
 		"activities": [
 			{
 				"name": "Lookup SQL Tables to Export",
