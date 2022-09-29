@@ -1224,7 +1224,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s4_vw_joins')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_merge_views')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1281,12 +1281,12 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/merge_individual_family_')]",
+			"name": "[concat(parameters('workspaceName'), '/s1_merge_individual_family')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "5_gold"
+					"name": "4_gold"
 				},
 				"content": {
 					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n",
@@ -1380,17 +1380,23 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_4')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "5_gold"
+					"name": "4_gold"
 				},
 				"content": {
+					"query": "/*\nMerges Individual to Family using the FamilyMembership table\n*/",
 					"metadata": {
 						"language": "sql"
-					}
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
 				},
 				"type": "SqlQuery"
 			},
