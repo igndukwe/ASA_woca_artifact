@@ -1434,12 +1434,12 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- how many individuals are assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;",
+					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- What is the distribution of individuals assigned to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;",
 					"metadata": {
 						"language": "sql"
 					},
 					"currentConnection": {
-						"databaseName": "master",
+						"databaseName": "woca_ldw",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
