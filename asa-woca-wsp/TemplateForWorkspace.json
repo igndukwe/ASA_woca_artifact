@@ -1147,7 +1147,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_FamilyMembership_usp_Copy1')]",
+			"name": "[concat(parameters('workspaceName'), '/s1_family_membership_usp')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
