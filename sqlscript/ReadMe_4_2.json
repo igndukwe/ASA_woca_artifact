@@ -2,7 +2,7 @@
 	"name": "ReadMe_4_2",
 	"properties": {
 		"folder": {
-			"name": "4_silver/4_2_ext_tables"
+			"name": "3_silver/3_2_ext_tbl"
 		},
 		"content": {
 			"query": "/*\nCreate stored procedure\nthat will use CETAS to create external tables for each of the procedures\n*/",

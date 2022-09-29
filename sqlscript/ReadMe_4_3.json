@@ -2,7 +2,7 @@
 	"name": "ReadMe_4_3",
 	"properties": {
 		"folder": {
-			"name": "4_silver/4_3_procedure"
+			"name": "3_silver/3_3_udp"
 		},
 		"content": {
 			"query": "/*\n1st Create stored procedure that will use CETAS to create external tables for each of the procedures\n2nd run each procedure before we can use them\n*/",

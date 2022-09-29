@@ -1,8 +1,8 @@
 {
-	"name": "s3_family_membership_view_silver",
+	"name": "s3_family_membership_vw",
 	"properties": {
 		"folder": {
-			"name": "4_silver/4_1_views"
+			"name": "3_silver/3_1_views"
 		},
 		"content": {
 			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family_membership\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family_membership\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n\n\n\n",
