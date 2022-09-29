@@ -156,6 +156,8 @@
 		"folder": {
 			"name": "Ingest4mSQL2DataLake/old"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2022-09-26T05:16:23Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
 }

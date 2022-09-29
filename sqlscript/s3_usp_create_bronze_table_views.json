@@ -1,0 +1,20 @@
+{
+	"name": "s3_usp_create_bronze_table_views",
+	"properties": {
+		"folder": {
+			"name": "2_bronze"
+		},
+		"content": {
+			"query": "USE woca_ldw\nGO\n\nCREATE OR ALTER PROCEDURE bronze.usp_create_views \n@folder NVARCHAR(100)\nAS\nBEGIN\n\n    DECLARE @create_view_sql_stmt NVARCHAR(MAX);\n\n    SET @create_view_sql_stmt = \n        'CREATE VIEW bronze.vw_'+ @folder + '\n            AS\n            SELECT\n            *\n            FROM\n                OPENROWSET(\n                    BULK ''https://asawocastaccdl.dfs.core.windows.net/asa-woca-adlfs-wsp-cnt/bronze/' + @folder + '/**'',\n                    FORMAT = ''PARQUET''\n                ) AS [result]'\n    print(@create_view_sql_stmt)\n    EXEC sp_executesql @create_view_sql_stmt;\n\nEND;\n\n-- Then use a Stored Procedure in the Pipeline to call this procedure",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "woca_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

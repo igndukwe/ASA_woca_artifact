@@ -5,7 +5,7 @@
 			"name": "4_silver/4_2_ext_tables"
 		},
 		"content": {
-			"query": "/*\n1st we need to ensure that the following scripts have all been run\n>   1_init/s1_create_woca_db_schemas\n>>  1_init/s2_create_external_data_source \n>>> 1_init/s3_create_external_file_formats\n\n2nd we can then run the scripts in this file\n*/",
+			"query": "/*\nCreate stored procedure\nthat will use CETAS to create external tables for each of the procedures\n*/",
 			"metadata": {
 				"language": "sql"
 			},
