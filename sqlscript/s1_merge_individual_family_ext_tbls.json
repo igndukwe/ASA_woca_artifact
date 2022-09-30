@@ -5,7 +5,7 @@
 			"name": "4_gold"
 		},
 		"content": {
-			"query": "--perform join on family family membership and family\n-- merging Individuals to families\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualFamily') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualFamily\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualFamily\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualFamily',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n",
+			"query": "--perform join on family family membership and family\n-- merging Individuals to families\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualFamily') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualFamily\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualFamily\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualFamily',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\nSELECT TOP 100 * FROM silver.Family\nSELECT TOP 100 * FROM silver.FamilyMembership\n",
 			"metadata": {
 				"language": "sql"
 			},
