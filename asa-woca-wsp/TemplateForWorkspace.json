@@ -933,7 +933,7 @@
 					"name": "3_silver/3_2_ext_tbl"
 				},
 				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\nGO\n\nCREATE EXTERNAL TABLE silver.FamilyMembership\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/FamilyMembership',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_FamilyMembership;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMembership]\nGO\n\n\nSELECT * FROM silver.FamilyMembership;",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\nGO\n\nCREATE EXTERNAL TABLE silver.FamilyMembership\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/FamilyMembership',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_FamilyMembership;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned prymary contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMembership]\nGO\n\n\nSELECT * FROM silver.FamilyMembership;",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1186,7 +1186,7 @@
 					"name": "3_silver/3_1_views"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family_membership\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family_membership\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n\n\n\n",
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- 2.) Drop view for trip_data_green if it already exist\nDROP VIEW IF EXISTS silver.vw_family_membership\nGO\n\n-- 3.) Create view for trip_data_green\nCREATE VIEW silver.vw_family_membership\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned prymary contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n\n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1209,7 +1209,7 @@
 					"name": "2_bronze/explore"
 				},
 				"content": {
-					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        primary_contact VARCHAR(10) 17,\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
+					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1281,7 +1281,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_merge_individual_family_ext_tbls')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_5_merge_individual_family_ext_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1289,7 +1289,7 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n",
+					"query": "--perform join on family family membership and family\n-- merging Individuals to families\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualFamily') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualFamily\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualFamily\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualFamily',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1403,7 +1403,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2_explore_merge_individual_family_ext_tbls')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_5_explore_individual_family_membership')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1411,7 +1411,7 @@
 					"name": "4_gold/explore"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n\n--1b count items after the join operation \nSELECT \n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n-- 1c. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n-- 2c. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n\n--3c how many distinct counts of individuals/family assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n--1d count the number of individuals that belong to each family relationship\n--Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;",
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on individual, family and family membership\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n\n--2a. total number of records after the join operation \nSELECT \n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n-- 3a. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n-- 3b. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n\n--3c how many distinct counts of individuals/family assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n--4a. how many individuals belong to each family relationship\n--*****Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1426,7 +1426,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2_individual_primary_cont_ext_tbl')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_2_primary_contact_dist_cnt_ext_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1434,7 +1434,7 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n-- What is the distribution of individuals assigned to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- What is the distribution of primart contact count\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.PrimaryContactDistCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.PrimaryContactDistCount\nGO\n\nCREATE EXTERNAL TABLE gold.PrimaryContactDistCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/PrimaryContactDistCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1449,7 +1449,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s3_individual_relationship_ext_tbl')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_3_family_relationship_cnt_ext_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1457,7 +1457,7 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--How Many individuals belong to each family relationship\n--Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS total_individuals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY total_individuals DESC;",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyRelationshipCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyRelationshipCount\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyRelationshipCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyRelationshipCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS Counts\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY Counts DESC;",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1472,7 +1472,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_explore_families')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_2_explore_families')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1495,7 +1495,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s3_top_ten_cities_families_hail')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_4_family_top_cities')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1503,7 +1503,7 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--top 10 cities where families hail\nSELECT TOP 10\n    city AS cities,\n    COUNT(city) AS familiys\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY familiys DESC;",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- what are the top 10 cities where families hail\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyTopCities') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyTopCities\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyTopCities\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyTopCities',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT TOP 10\n    city AS cities,\n    COUNT(city) AS familiys\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY familiys DESC;",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1541,7 +1541,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_4_explore_individual_family_membership')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1549,7 +1549,7 @@
 					"name": "4_gold/explore"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(fm.individual)) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nORDER BY indiv_per_fam_count DESC;\n\n--2b. who are thoes individuals that do not have family members\nSELECT\n   fm.individual,\n   COUNT(fm.individual) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nHAVING COUNT(fm.individual) < 1\n\n\n\n\n\n\n\nSELECT\n    COUNT(fm.individual) as indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY  fm.individual;\n\n--2a. how many individuals per family count distribution\nSELECT \n    DISTINCT(COUNT(fm.individual)) as indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY fm.family\nORDER BY indiv_per_fam_count;\n\n--3a. how many individuals per family count\nSELECT \n    COUNT(f.city) as indiv_per_city_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY COUNT(f.city);\n",
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(fm.individual)) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nORDER BY indiv_per_fam_count DESC;\n\n--2b. who are thoes individuals that do not have family members\nSELECT\n   fm.individual,\n   COUNT(fm.individual) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nHAVING COUNT(fm.individual) < 1\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1564,7 +1564,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_explore_individuals')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_1_explore_individuals')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1587,7 +1587,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_individual_age_grp_cnt_ext_tbl')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_1_individual_age_grp_cnt_ext_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1595,7 +1595,30 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- that Counts individual by age group\n\n-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualAgeGroupCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualAgeGroupCount\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualAgeGroupCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualAgeGroupCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    age_group_name AS age_groups,\n    COUNT(age_group_name) AS Counts\nFROM silver.Individual\nWHERE age_group_name IS NOT NULL\nGROUP BY age_group_name\nORDER BY Counts DESC;\n",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualAgeGroupCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualAgeGroupCount\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualAgeGroupCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualAgeGroupCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    age_group_name AS age_groups,\n    COUNT(age_group_name) AS Counts\nFROM silver.Individual\nWHERE age_group_name IS NOT NULL\nGROUP BY age_group_name\nORDER BY Counts DESC;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_3_explore_family_membership')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold/explore"
+				},
+				"content": {
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. what is the proportion of family memberships that where assigned vs unassigned\nSELECT \n    assigned,\n    COUNT(assigned) AS totals\nFROM silver.FamilyMembership\nWHERE assigned IS NOT NULL\nGROUP BY assigned\nORDER BY totals DESC;\n\n\n--1b. how many family memberships where assigned\nSELECT \n    assigned,\n    COUNT(assigned) AS totals\nFROM silver.FamilyMembership\nWHERE assigned IS NOT NULL\nAND assigned = 0\nGROUP BY assigned;\n\n--1c. how many family memberships where not assigned\nSELECT \n    assigned,\n    COUNT(assigned) AS totals\nFROM silver.FamilyMembership\nWHERE assigned IS NOT NULL\nAND assigned = 1\nGROUP BY assigned;\n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
