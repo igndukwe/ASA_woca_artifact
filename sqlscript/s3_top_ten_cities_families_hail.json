@@ -1,0 +1,20 @@
+{
+	"name": "s3_top_ten_cities_families_hail",
+	"properties": {
+		"folder": {
+			"name": "4_gold"
+		},
+		"content": {
+			"query": "--top 10 cities where families hail\nSELECT TOP 10\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
