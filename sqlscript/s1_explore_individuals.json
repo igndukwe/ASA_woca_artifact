@@ -5,7 +5,7 @@
 			"name": "4_gold/explore"
 		},
 		"content": {
-			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. Count individuals by age groups\nSELECT \n    age_group_name,\n    COUNT(age_group_name) AS totals\nFROM silver.Individual\nWHERE age_group_name IS NOT NULL\nGROUP BY age_group_name\nORDER BY totals DESC;\n",
+			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. What are the individual age groups Counts\nSELECT \n    age_group_name,\n    COUNT(age_group_name) AS totals\nFROM silver.Individual\nWHERE age_group_name IS NOT NULL\nGROUP BY age_group_name\nORDER BY totals DESC;\n\n\n--*****Question: where is the dictionary/lookup to primary ethnicity\n--2a. What are the Primary ethnicities\nSELECT \n    primary_ethnicity,\n    COUNT(primary_ethnicity) AS totals\nFROM silver.Individual\nWHERE primary_ethnicity IS NOT NULL\nGROUP BY primary_ethnicity\nORDER BY totals DESC;\n\n--2b. What are the top 10 Primary ethnicities\nSELECT TOP 10\n    primary_ethnicity,\n    COUNT(primary_ethnicity) AS totals\nFROM silver.Individual\nWHERE primary_ethnicity IS NOT NULL\nGROUP BY primary_ethnicity\nORDER BY totals DESC;\n\n\n\n--3a. What are the primary tribes\nSELECT \n    tribe_primary_name,\n    COUNT(tribe_primary_name) AS totals\nFROM silver.Individual\nWHERE tribe_primary_name IS NOT NULL\nGROUP BY tribe_primary_name\nORDER BY totals DESC;\n\n\n--3b. What are the top 10 primary tribes\nSELECT TOP 10\n    tribe_primary_name,\n    COUNT(tribe_primary_name) AS totals\nFROM silver.Individual\nWHERE tribe_primary_name IS NOT NULL\nGROUP BY tribe_primary_name\nORDER BY totals DESC;\n\n",
 			"metadata": {
 				"language": "sql"
 			},
