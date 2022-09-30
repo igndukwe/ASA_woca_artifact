@@ -1503,7 +1503,30 @@
 					"name": "4_gold"
 				},
 				"content": {
-					"query": "--top 10 cities where families hail\nSELECT TOP 10\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;",
+					"query": "-- switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--top 10 cities where families hail\nSELECT TOP 10\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS familiys\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY familiys DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "3_silver"
+				},
+				"content": {
+					"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n*/",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1512,6 +1535,23 @@
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold/explore"
+				},
+				"content": {
+					"metadata": {
+						"language": "sql"
+					}
 				},
 				"type": "SqlQuery"
 			},
