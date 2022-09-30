@@ -1,0 +1,20 @@
+{
+	"name": "SQL script 1",
+	"properties": {
+		"folder": {
+			"name": "4_gold/explore"
+		},
+		"content": {
+			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. count the cities where families hail\nSELECT \n    city,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n\n--2a. count the cities where families hail\n-- replace families come from a particular city\n-- it might be better to do this in python\nSELECT\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n--3a. top 10 cities where families hail\nSELECT TOP 10\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "woca_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
