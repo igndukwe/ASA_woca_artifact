@@ -5,7 +5,7 @@
 			"name": "4_gold/explore"
 		},
 		"content": {
-			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. count the cities where families hail\nSELECT \n    city,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n\n",
+			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. what is the proportion of family memberships that where assigned vs unassigned\nSELECT \n    assigned,\n    COUNT(assigned) AS totals\nFROM silver.FamilyMembership\nWHERE assigned IS NOT NULL\nGROUP BY assigned\nORDER BY totals DESC;\n\n\n--1b. how many family memberships where assigned\nSELECT \n    assigned,\n    COUNT(assigned) AS totals\nFROM silver.FamilyMembership\nWHERE assigned IS NOT NULL\nAND assigned = 0\nGROUP BY assigned;\n\n--1c. how many family memberships where not assigned\nSELECT \n    assigned,\n    COUNT(assigned) AS totals\nFROM silver.FamilyMembership\nWHERE assigned IS NOT NULL\nAND assigned = 1\nGROUP BY assigned;\n\n\n",
 			"metadata": {
 				"language": "sql"
 			},
