@@ -5,12 +5,12 @@
 			"name": "4_gold/explore"
 		},
 		"content": {
-			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);",
+			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many individuals per family count\nSELECT \n    COUNT(fm.individual) as indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY fm.family;\n\n--2a. how many individuals per family count distribution\nSELECT \n    DISTINCT(COUNT(fm.individual)) as indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY fm.family\nORDER BY indiv_per_fam_count;",
 			"metadata": {
 				"language": "sql"
 			},
 			"currentConnection": {
-				"databaseName": "master",
+				"databaseName": "woca_ldw",
 				"poolName": "Built-in"
 			},
 			"resultLimit": 5000
