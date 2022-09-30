@@ -1,0 +1,20 @@
+{
+	"name": "s4_3_explore_family_membership",
+	"properties": {
+		"folder": {
+			"name": "4_gold/explore"
+		},
+		"content": {
+			"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. count the cities where families hail\nSELECT \n    city,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "woca_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
