@@ -5,7 +5,7 @@
 			"name": "4_gold"
 		},
 		"content": {
-			"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- that Counts individual by age group\n\n-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('silver.IndividualAgeGroupCount') IS NOT NULL\n    DROP EXTERNAL TABLE silver.IndividualAgeGroupCount\nGO\n\nCREATE EXTERNAL TABLE silver.IndividualAgeGroupCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/IndividualAgeGroupCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    age_group_name,\n    COUNT(age_group_name) AS totals\nFROM silver.Individual\nWHERE age_group_name IS NOT NULL\nGROUP BY age_group_name\nORDER BY totals DESC;\n",
+			"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- that Counts individual by age group\n\n-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualAgeGroupCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualAgeGroupCount\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualAgeGroupCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualAgeGroupCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    age_group_name,\n    COUNT(age_group_name) AS totals\nFROM silver.Individual\nWHERE age_group_name IS NOT NULL\nGROUP BY age_group_name\nORDER BY totals DESC;\n",
 			"metadata": {
 				"language": "sql"
 			},
