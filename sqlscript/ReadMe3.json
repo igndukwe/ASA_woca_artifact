@@ -1,0 +1,20 @@
+{
+	"name": "ReadMe3",
+	"properties": {
+		"folder": {
+			"name": "3_silver"
+		},
+		"content": {
+			"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n*/",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
