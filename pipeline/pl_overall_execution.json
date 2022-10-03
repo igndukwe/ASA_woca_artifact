@@ -20,7 +20,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Execute Pipeline to extract data from db",
+						"activity": "Convert Parquet to Delta Format",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -30,6 +30,26 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "pl_create_silver_tbl",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Convert Parquet to Delta Format",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline to extract data from db",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_cov_parquet_to_delta",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
