@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "7e73fc7a-58dd-4497-b2c1-b4b36dfd2dec"
+				"spark.autotune.trackingId": "5f357946-4ed0-430b-98d1-58c32600062a"
 			}
 		},
 		"metadata": {
@@ -58,7 +58,7 @@
 					}
 				},
 				"source": [
-					"## Converting Parquet to Delta"
+					"## Dynamic Parameters"
 				]
 			},
 			{
@@ -78,10 +78,23 @@
 					]
 				},
 				"source": [
-					"folder_path = ''\r\n",
-					"data_folder = ''"
+					"folder_path = 'bronze'\r\n",
+					"data_folder = 'Family'"
 				],
-				"execution_count": null
+				"execution_count": 12
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Converting Parquet to Delta"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -107,7 +120,7 @@
 					"#print(f\"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/{anyi}`\")\r\n",
 					""
 				],
-				"execution_count": null
+				"execution_count": 13
 			}
 		]
 	}
