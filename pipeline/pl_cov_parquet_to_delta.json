@@ -6,7 +6,21 @@
 				"name": "ForEach1",
 				"type": "ForEach",
 				"dependsOn": [],
+				"userProperties": [
+					{
+						"name": "folder_path_param"
+					},
+					{
+						"name": "data_folder_param"
+					}
+				],
 				"typeProperties": {
+					"items": {
+						"value": "@variables('folder_path_data_folder_array_var')",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 2,
 					"activities": [
 						{
 							"name": "NotebookTransParquetToDelta",
@@ -26,13 +40,8 @@
 									"type": "NotebookReference"
 								},
 								"parameters": {
-									"file_path_param": {
-										"value": "",
-										"type": "string"
-									},
-									"folder_data_param": {
-										"value": "",
-										"type": "string"
+									"": {
+										"value": ""
 									}
 								},
 								"snapshot": true,
@@ -48,6 +57,12 @@
 				}
 			}
 		],
+		"variables": {
+			"folder_path_data_folder_array_var": {
+				"type": "String",
+				"defaultValue": "[ \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"Individual\" \t}, \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"FamilyMembership\" \t}, \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"Family\" \t} ]"
+			}
+		},
 		"annotations": []
 	}
 }
