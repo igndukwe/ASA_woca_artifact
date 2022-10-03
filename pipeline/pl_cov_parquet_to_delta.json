@@ -63,8 +63,21 @@
 		],
 		"variables": {
 			"folder_path_data_folder_array_var": {
-				"type": "String",
-				"defaultValue": "[ \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"Individual\" \t}, \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"FamilyMembership\" \t}, \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"Family\" \t} ]"
+				"type": "Array",
+				"defaultValue": [
+					{
+						"folder_path": "bronze",
+						"data_folder": "Individual"
+					},
+					{
+						"folder_path": "bronze",
+						"data_folder": "FamilyMembership"
+					},
+					{
+						"folder_path": "bronze",
+						"data_folder": "Family"
+					}
+				]
 			}
 		},
 		"annotations": []

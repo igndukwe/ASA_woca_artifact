@@ -20,7 +20,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Convert Parquet to Delta Format",
+						"activity": "Convert Bronze Parquet to Delta Format",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -36,7 +36,7 @@
 				}
 			},
 			{
-				"name": "Convert Parquet to Delta Format",
+				"name": "Convert Bronze Parquet to Delta Format",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
@@ -52,6 +52,15 @@
 						"referenceName": "pl_cov_parquet_to_delta",
 						"type": "PipelineReference"
 					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Convert Silver Parquet to Delta Format",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
 					"waitOnCompletion": true
 				}
 			}
