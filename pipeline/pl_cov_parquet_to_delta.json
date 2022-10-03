@@ -3,17 +3,10 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "ForEach1",
+				"name": "ForEachBronzeDataPath",
 				"type": "ForEach",
 				"dependsOn": [],
-				"userProperties": [
-					{
-						"name": "folder_path_param"
-					},
-					{
-						"name": "data_folder_param"
-					}
-				],
+				"userProperties": [],
 				"typeProperties": {
 					"items": {
 						"value": "@variables('folder_path_data_folder_array_var')",
@@ -40,8 +33,19 @@
 									"type": "NotebookReference"
 								},
 								"parameters": {
-									"": {
-										"value": ""
+									"folder_path_param": {
+										"value": {
+											"value": "@item().folder_path",
+											"type": "Expression"
+										},
+										"type": "string"
+									},
+									"data_folder": {
+										"value": {
+											"value": "@item().data_folder",
+											"type": "Expression"
+										},
+										"type": "string"
 									}
 								},
 								"snapshot": true,
