@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "2d482845-6c7e-4ff8-b883-529707c99c37"
+				"spark.autotune.trackingId": "c620d27a-4b68-468b-8de5-69510ef13a30"
 			}
 		},
 		"metadata": {
@@ -75,10 +75,10 @@
 					}
 				},
 				"source": [
-					"path = z.input(\"path\")\r\n",
-					"TablePath = z.input(\"dataFolder\")"
+					"folder_path = z.input(\"folder_path\")\r\n",
+					"data_folder = z.input(\"data_folder\")"
 				],
-				"execution_count": null
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -100,11 +100,11 @@
 					"#deltaTable_family = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Family`\")\r\n",
 					"#deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/FamilyMembership`\")\r\n",
 					"\r\n",
-					"deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/{path}/{dataFolder}`\")\r\n",
+					"deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/{folder_path}/{data_folder}`\")\r\n",
 					"#print(f\"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/{anyi}`\")\r\n",
 					""
 				],
-				"execution_count": 17
+				"execution_count": null
 			}
 		]
 	}
