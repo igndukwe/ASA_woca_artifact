@@ -149,6 +149,186 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/pl_load_data_4m_db_2_dl')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
+				"activities": [
+					{
+						"name": "Lookup SQL Tables to Export",
+						"description": "Looks up the database to select a list of tables/views from the dbo schema",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 60,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": "SELECT\n    s.name AS SchemaName,\n    t.name AS TableName\nFROM sys.tables t\nINNER JOIN sys.schemas s ON s.schema_id = t.schema_id\nWHERE s.name = 'dbo';",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_woca_db_lookup_activity",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "For Each Table",
+						"description": "For each of the output values ('SchemaName' and 'TableName') from the lookup table, perform two activities.",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup SQL Tables to Export",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup SQL Tables to Export').output.value",
+								"type": "Expression"
+							},
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "Copy data to Data Lake",
+									"description": "Copy the data from database selected table/view to the data lake (source to sink).",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_waco_db_copy_activity",
+											"type": "DatasetReference",
+											"parameters": {
+												"SchemaName": {
+													"value": "@item().SchemaName",
+													"type": "Expression"
+												},
+												"TableName": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_woca_dl",
+											"type": "DatasetReference",
+											"parameters": {
+												"datalakefolder": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Create View",
+									"description": "Calls a stored procedure 'bronze.usp_create_views' to generate views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy data to Data Lake",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[bronze].[usp_create_views]",
+										"storedProcedureParameters": {
+											"folder": {
+												"value": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_woca_ldw",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "old"
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-09-26T05:16:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/ds_woca_db_lookup_activity')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_waco_db_copy_activity')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/pl_load_data_4m_db_2_dl_v1')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -518,6 +698,59 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/pl_overall_execution')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline to extract data from db",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_data_4m_db_2_dl_v2",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Pipeline to create silver tbls",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline to extract data from db",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_create_silver_tbl",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/ds_waco_db_copy_activity')]",
 			"type": "Microsoft.Synapse/workspaces/datasets",
 			"apiVersion": "2019-06-01-preview",
@@ -550,6 +783,40 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/linkedServices/ls_waco_sql_db')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ds_waco_silver_delete_activity')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "This is the dataset that points to the silver path where we want to delete listed files in the data lake. We have also assigned dataset a folder_path_param parameter with no values because we want it to be updated with variables from other sources.",
+				"linkedServiceName": {
+					"referenceName": "ls_woca_dl",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folder_path_param": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folder_path_param",
+							"type": "Expression"
+						},
+						"fileSystem": "woca-data"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_dl')]"
 			]
 		},
 		{
@@ -787,6 +1054,52 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "2_bronze"
+				},
+				"content": {
+					"query": "/*\nThis is the procedure that the Stored procedure in the 'Pipelines/old/pl_load_data_4m_SQL_2_dl_v1' pipeline \ncalls in order to create views in the data lake gen2 virtual data wearhouse\n*/",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "3_silver"
+				},
+				"content": {
+					"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n*/",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/ReadMe_3_1')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -796,6 +1109,29 @@
 				},
 				"content": {
 					"query": "/*\nWe can create a dynamic PIPELINE that will create (individual, family_membership and family) SILVER VIES\n- However, we will be creating EXTERNAL TABLES in '3_2_ext_tbl' and using them\n*/",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ReadMe_4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold"
+				},
+				"content": {
+					"query": "/*\nMerges Individual to Family using the FamilyMembership table\n*/",
 					"metadata": {
 						"language": "sql"
 					},
@@ -902,6 +1238,52 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/s1_explore_individual')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "2_bronze/explore"
+				},
+				"content": {
+					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/Individual/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(contactid)),\nMAX(LEN(mag_agegroupidname)),\nMAX(LEN(gendercodelabel)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_phoregistered)),\nMAX(LEN(mag_ethnicityprimaryid)),\nMAX(LEN(mag_physicaldisability)),\nMAX(LEN(statuscodelabel)),\n*/\nSELECT\n    MAX(LEN(statuscodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n-- Count the number of records when age_group_name is null 8547\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n\n\n\n\n-- Remove rows with the null in any of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in any of the listed columns COUNT: 4725\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\n\n\n-- Remove rows with the null in all of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in all of the listed columns COUNT: 8605\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s1_explore_merge_individual_family_vws')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "3_silver/3_1_views/explore"
+				},
+				"content": {
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n\n--1b count items after the join operation\nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n-- 1c. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n-- 2c. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n--3c get the distinct counts of individuals/family were assigned primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n--1d count the number of individuals that belong to each family relationship\n--Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/s1_family_ext_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -925,29 +1307,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2_family_membership_ext_tbl')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "3_silver/3_2_ext_tbl"
-				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\nGO\n\nCREATE EXTERNAL TABLE silver.FamilyMembership\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/FamilyMembership',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_FamilyMembership;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned prymary contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMembership]\nGO\n\n\nSELECT * FROM silver.FamilyMembership;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/s1_family_membership_usp')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -957,75 +1316,6 @@
 				},
 				"content": {
 					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family_membership\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\n\n    CREATE EXTERNAL TABLE silver.FamilyMembership\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/FamilyMembership',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/FamilyMembership/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_membership_id VARCHAR(50) 15,\n            individual VARCHAR(50) 25,\n            family VARCHAR(50) 10,\n            primary_contact VARCHAR(10) 17,\n            family_relationship VARCHAR(20) 4,\n            family_relationship_label VARCHAR(20) 5\n        ) AS [familyMembership];\n\nEND;\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s2_family_usp')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "3_silver/3_3_udp"
-				},
-				"content": {
-					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family\nAS\nBEGIN\n\n        IF OBJECT_ID('silver.Family') IS NOT NULL\n        DROP EXTERNAL TABLE silver.Family\n\n    CREATE EXTERNAL TABLE silver.Family\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Family',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Family/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_id VARCHAR(50) 64,\n            primary_contact VARCHAR(50) 46,\n            postcode VARCHAR(15) 9,\n            city VARCHAR(50) 32,\n            state_code_label VARCHAR(20) 39\n        ) AS [family];\n\nEND;\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s3_individual_ext_tbl')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "3_silver/3_2_ext_tbl"
-				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual\nGO\n\nCREATE EXTERNAL TABLE silver.Individual\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/Individual',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_Individual;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\nSELECT * FROM silver.Individual;\n\n--DROP EXTERNAL TABLE silver.individual;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s3_individual_usp')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "3_silver/3_3_udp"
-				},
-				"content": {
-					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_individual\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual;\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Individual/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            individual_id VARCHAR(50) 77,\n            age_group_name VARCHAR(50) 61,\n            gender_code_label VARCHAR(50) 69,\n            date_of_birth VARCHAR(50) 103,\n            tribe_primary_name VARCHAR(100) 90,\n            pho_registered BIT 157,\n            primary_ethnicity VARCHAR(50) 46,\n            physical_disability BIT 81,\n            status_code_label VARCHAR(20) 22\n        ) AS [individuals]\n    WHERE \n        age_group_name IS NOT NULL OR\n        gender_code_label IS NOT NULL OR\n        date_of_birth IS NOT NULL OR\n        tribe_primary_name IS NOT NULL OR\n        primary_ethnicity IS NOT NULL;\n\nEND;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1086,7 +1376,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_explore_individual')]",
+			"name": "[concat(parameters('workspaceName'), '/s2_explore_family')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1094,7 +1384,53 @@
 					"name": "2_bronze/explore"
 				},
 				"content": {
-					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/Individual/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(contactid)),\nMAX(LEN(mag_agegroupidname)),\nMAX(LEN(gendercodelabel)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_tribeprimaryidname)),\nMAX(LEN(mag_phoregistered)),\nMAX(LEN(mag_ethnicityprimaryid)),\nMAX(LEN(mag_physicaldisability)),\nMAX(LEN(statuscodelabel)),\n*/\nSELECT\n    MAX(LEN(statuscodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nGO\n\n-- Count the number of records when age_group_name is null 8547\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE age_group_name IS NOT NULL\nGO\n\n\n\n\n\n\n-- Remove rows with the null in any of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in any of the listed columns COUNT: 4725\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL AND\n    gender_code_label IS NOT NULL AND\n    date_of_birth IS NOT NULL AND\n    tribe_primary_name IS NOT NULL AND\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\n\n\n-- Remove rows with the null in all of the listed columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n-- Remove rows with the null in all of the listed columns COUNT: 8605\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n",
+					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/Family/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupid)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_physical_postcode)),\nMAX(LEN(mag_physical_city)),\nMAX(LEN(statecodelabel))\n*/\nSELECT\n    MAX(LEN(statecodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupid,\n    mag_primarycontact,\n    mag_physical_postcode,\n    mag_physical_city\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s2_family_membership_ext_tbl')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "3_silver/3_2_ext_tbl"
+				},
+				"content": {
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.FamilyMembership') IS NOT NULL\n    DROP EXTERNAL TABLE silver.FamilyMembership\nGO\n\nCREATE EXTERNAL TABLE silver.FamilyMembership\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/FamilyMembership',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_FamilyMembership;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned prymary contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMembership]\nGO\n\n\nSELECT * FROM silver.FamilyMembership;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s2_family_usp')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "3_silver/3_3_udp"
+				},
+				"content": {
+					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_family\nAS\nBEGIN\n\n        IF OBJECT_ID('silver.Family') IS NOT NULL\n        DROP EXTERNAL TABLE silver.Family\n\n    CREATE EXTERNAL TABLE silver.Family\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Family',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Family/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            family_id VARCHAR(50) 64,\n            primary_contact VARCHAR(50) 46,\n            postcode VARCHAR(15) 9,\n            city VARCHAR(50) 32,\n            state_code_label VARCHAR(20) 39\n        ) AS [family];\n\nEND;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1155,7 +1491,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s2_explore_family')]",
+			"name": "[concat(parameters('workspaceName'), '/s3_explore_family_membership')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1163,7 +1499,7 @@
 					"name": "2_bronze/explore"
 				},
 				"content": {
-					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/Family/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupid)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_physical_postcode)),\nMAX(LEN(mag_physical_city)),\nMAX(LEN(statecodelabel))\n*/\nSELECT\n    MAX(LEN(statecodelabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupid,\n    mag_primarycontact,\n    mag_physical_postcode,\n    mag_physical_city\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Family/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_id VARCHAR(50) 64,\n        primary_contact VARCHAR(50) 46,\n        postcode VARCHAR(15) 9,\n        city VARCHAR(50) 32,\n        state_code_label VARCHAR(20) 39\n    ) AS [family]\nGO\n",
+					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1201,15 +1537,15 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s3_explore_family_membership')]",
+			"name": "[concat(parameters('workspaceName'), '/s3_individual_ext_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "2_bronze/explore"
+					"name": "3_silver/3_2_ext_tbl"
 				},
 				"content": {
-					"query": "\nUSE woca_ldw\nGO\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n--Explore the datatypes and column_ordinals\nEXEC sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''bronze/FamilyMembership/*.parquet'',\n        DATA_SOURCE = ''woca_data_src'',\n        FORMAT = ''PARQUET''\n    ) AS [result]'\nGO\n\n\n\n-- Chech the maximum length of some columns\n/*\nMAX(LEN(mag_familygroupmembershipid)),\nMAX(LEN(mag_individual)),\nMAX(LEN(mag_familygroup)),\nMAX(LEN(mag_primarycontact)),\nMAX(LEN(mag_familygrouprelationship)),\nMAX(LEN(mag_familygrouprelationshiplabel))\n*/\nSELECT\n    MAX(LEN(mag_familygrouprelationshiplabel)) AS MAX_LEN\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\nSELECT\n    mag_familygroupmembershipid,\n    mag_individual,\n    mag_familygroup,\n    mag_primarycontact,\n    mag_familygrouprelationship,\n    mag_familygrouprelationshiplabel\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) AS [result]\nGO\n\n-- Select specific columns\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n-- Select specific columns where age_group_name is not null\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nWHERE family_id IS NOT NULL\nGO\n\n\n-- Count the number of records 8634\nSELECT\n    COUNT(1) AS TOTAL\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n\n\n/*\n===============USE THIS TO CREATE SILVER VIEW==========\n*/\n\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/FamilyMembership/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        family_membership_id VARCHAR(50) 15,\n        individual VARCHAR(50) 25,\n        family VARCHAR(50) 10,\n        assigned BIT 17, -- assigned_primary_contact\n        family_relationship VARCHAR(20) 4,\n        family_relationship_label VARCHAR(20) 5\n    ) AS [familyMember]\nGO\n",
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n--- We are just transforming table/view to select only the columns we need\n\nUSE woca_ldw;\n\nIF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual\nGO\n\nCREATE EXTERNAL TABLE silver.Individual\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'silver/Individual',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\n--SELECT * FROM bronze.vw_Individual;\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'bronze/Individual/*.parquet',\n        DATA_SOURCE = 'woca_data_src',\n        FORMAT = 'PARQUET'\n    ) WITH (\n        individual_id VARCHAR(50) 77,\n        age_group_name VARCHAR(50) 61,\n        gender_code_label VARCHAR(50) 69,\n        date_of_birth VARCHAR(50) 103,\n        tribe_primary_name VARCHAR(100) 90,\n        pho_registered BIT 157,\n        primary_ethnicity VARCHAR(50) 46,\n        physical_disability BIT 81,\n        status_code_label VARCHAR(20) 22\n    ) AS [individuals]\nWHERE \n    age_group_name IS NOT NULL OR\n    gender_code_label IS NOT NULL OR\n    date_of_birth IS NOT NULL OR\n    tribe_primary_name IS NOT NULL OR\n    primary_ethnicity IS NOT NULL\nGO\n\n\n\nSELECT * FROM silver.Individual;\n\n--DROP EXTERNAL TABLE silver.individual;",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1224,332 +1560,15 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s1_explore_merge_individual_family_vws')]",
+			"name": "[concat(parameters('workspaceName'), '/s3_individual_usp')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "3_silver/3_1_views/explore"
+					"name": "3_silver/3_3_udp"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on family family membership and family\nSELECT \n    i.*, fm.*, f.*\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n\n--1b count items after the join operation\nSELECT \n    COUNT(1) AS totals\nFROM silver.vw_individual i\nLEFT JOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.vw_family f ON (f.family_id = fm.family);\n\n\n-- 1c. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n-- 2c. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n--3c get the distinct counts of individuals/family were assigned primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n--1d count the number of individuals that belong to each family relationship\n--Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.vw_individual i\nJOIN silver.vw_family_membership fm ON (i.individual_id = fm.individual)\nJOIN silver.vw_family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ds_waco_silver_delete_activity')]",
-			"type": "Microsoft.Synapse/workspaces/datasets",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "This is the dataset that points to the silver path where we want to delete listed files in the data lake. We have also assigned dataset a folder_path_param parameter with no values because we want it to be updated with variables from other sources.",
-				"linkedServiceName": {
-					"referenceName": "ls_woca_dl",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folder_path_param": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@dataset().folder_path_param",
-							"type": "Expression"
-						},
-						"fileSystem": "woca-data"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_dl')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_5_merge_individual_family_ext_tbls')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold"
-				},
-				"content": {
-					"query": "--perform join on family family membership and family\n-- merging Individuals to families\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualFamily') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualFamily\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualFamily\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualFamily',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ReadMe_2')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "2_bronze"
-				},
-				"content": {
-					"query": "/*\nThis is the procedure that the Stored procedure in the 'Pipelines/old/pl_load_data_4m_SQL_2_dl_v1' pipeline \ncalls in order to create views in the data lake gen2 virtual data wearhouse\n*/",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/pl_overall_execution')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"activities": [
-					{
-						"name": "Execute Pipeline to extract data from db",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_load_data_4m_db_2_dl_v2",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "Execute Pipeline to create silver tbls",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Execute Pipeline to extract data from db",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "pl_create_silver_tbl",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ReadMe_4')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold"
-				},
-				"content": {
-					"query": "/*\nMerges Individual to Family using the FamilyMembership table\n*/",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_5_explore_individual_family_membership')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold/explore"
-				},
-				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on individual, family and family membership\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n\n--2a. total number of records after the join operation \nSELECT \n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n-- 3a. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n-- 3b. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n\n--3c how many distinct counts of individuals/family assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n--4a. how many individuals belong to each family relationship\n--*****Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n----- individuals\nSELECT\n    f.city,\n    i.individual_id,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n\n----\nSELECT\n    f.city,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_2_primary_contact_dist_cnt_ext_tbl')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold"
-				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- What is the distribution of primart contact count\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.PrimaryContactDistCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.PrimaryContactDistCount\nGO\n\nCREATE EXTERNAL TABLE gold.PrimaryContactDistCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/PrimaryContactDistCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_3_family_relationship_cnt_ext_tbl')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold"
-				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyRelationshipCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyRelationshipCount\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyRelationshipCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyRelationshipCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS Counts\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY Counts DESC;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_2_explore_families')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold/explore"
-				},
-				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. count the cities where families hail\nSELECT \n    city,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n\n--2a. count the cities where families hail\n-- replace families come from a particular city\n-- it might be better to do this in python\nSELECT\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n--3a. top 10 cities where families hail\nSELECT TOP 10\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_4_family_top_cities')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold"
-				},
-				"content": {
-					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- what are the top 10 cities where families hail\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyTopCities') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyTopCities\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyTopCities\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyTopCities',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT TOP 10\n    city AS cities,\n    COUNT(city) AS familiys\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY familiys DESC;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ReadMe_3')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "3_silver"
-				},
-				"content": {
-					"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n*/",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "master",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/s4_4_explore_individual_family_membership')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "4_gold/explore"
-				},
-				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(fm.individual)) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nORDER BY indiv_per_fam_count DESC;\n\n--2b. who are thoes individuals that do not have family members\nSELECT\n   fm.individual,\n   COUNT(fm.individual) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nHAVING COUNT(fm.individual) < 1\n",
+					"query": "USE woca_ldw\nGO\n\n\nCREATE OR ALTER PROCEDURE silver.usp_silver_individual\nAS\nBEGIN\n\n    IF OBJECT_ID('silver.Individual') IS NOT NULL\n    DROP EXTERNAL TABLE silver.Individual;\n\n    CREATE EXTERNAL TABLE silver.Individual\n        WITH\n        (\n            DATA_SOURCE = woca_data_src,\n            LOCATION = 'silver/Individual',\n            FILE_FORMAT = parquet_file_format\n        )\n    AS\n    SELECT\n        *\n    FROM\n        OPENROWSET(\n            BULK 'bronze/Individual/*.parquet',\n            DATA_SOURCE = 'woca_data_src',\n            FORMAT = 'PARQUET'\n        ) WITH (\n            individual_id VARCHAR(50) 77,\n            age_group_name VARCHAR(50) 61,\n            gender_code_label VARCHAR(50) 69,\n            date_of_birth VARCHAR(50) 103,\n            tribe_primary_name VARCHAR(100) 90,\n            pho_registered BIT 157,\n            primary_ethnicity VARCHAR(50) 46,\n            physical_disability BIT 81,\n            status_code_label VARCHAR(20) 22\n        ) AS [individuals]\n    WHERE \n        age_group_name IS NOT NULL OR\n        gender_code_label IS NOT NULL OR\n        date_of_birth IS NOT NULL OR\n        tribe_primary_name IS NOT NULL OR\n        primary_ethnicity IS NOT NULL;\n\nEND;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1610,6 +1629,52 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/s4_2_explore_families')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold/explore"
+				},
+				"content": {
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. count the cities where families hail\nSELECT \n    city,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n\n--2a. count the cities where families hail\n-- replace families come from a particular city\n-- it might be better to do this in python\nSELECT\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;\n\n--3a. top 10 cities where families hail\nSELECT TOP 10\n    REPLACE(city, '[,]', '') AS cities,\n    COUNT(city) AS totals\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY totals DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_2_primary_contact_dist_cnt_ext_tbl')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold"
+				},
+				"content": {
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- What is the distribution of primart contact count\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.PrimaryContactDistCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.PrimaryContactDistCount\nGO\n\nCREATE EXTERNAL TABLE gold.PrimaryContactDistCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/PrimaryContactDistCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/s4_3_explore_family_membership')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -1629,6 +1694,376 @@
 					"resultLimit": 5000
 				},
 				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_3_family_relationship_cnt_ext_tbl')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold"
+				},
+				"content": {
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyRelationshipCount') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyRelationshipCount\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyRelationshipCount\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyRelationshipCount',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS Counts\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY Counts DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_4_explore_individual_family_membership')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold/explore"
+				},
+				"content": {
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(fm.individual)) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nORDER BY indiv_per_fam_count DESC;\n\n--2b. who are thoes individuals that do not have family members\nSELECT\n   fm.individual,\n   COUNT(fm.individual) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nHAVING COUNT(fm.individual) < 1\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_4_family_top_cities')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold"
+				},
+				"content": {
+					"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- what are the top 10 cities where families hail\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyTopCities') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyTopCities\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyTopCities\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyTopCities',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT TOP 10\n    city AS cities,\n    COUNT(city) AS familiys\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY familiys DESC;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_5_explore_individual_family_membership')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold/explore"
+				},
+				"content": {
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on individual, family and family membership\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n\n--2a. total number of records after the join operation \nSELECT \n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n-- 3a. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n-- 3b. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n\n--3c how many distinct counts of individuals/family assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n--4a. how many individuals belong to each family relationship\n--*****Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n----- individuals\nSELECT\n    f.city,\n    i.individual_id,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n\n----\nSELECT\n    f.city,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/s4_5_merge_individual_family_ext_tbls')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "4_gold"
+				},
+				"content": {
+					"query": "--perform join on family family membership and family\n-- merging Individuals to families\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.IndividualFamily') IS NOT NULL\n    DROP EXTERNAL TABLE gold.IndividualFamily\nGO\n\nCREATE EXTERNAL TABLE gold.IndividualFamily\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/IndividualFamily',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Notebook 1')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "wocasparkpool",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "f57905a6-93dc-4cda-8827-a2f5f1bf6aeb"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "python"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/6989b574-d03a-4106-a7f2-671a932ce49b/resourceGroups/asa-woca-rg/providers/Microsoft.Synapse/workspaces/asa-woca-wsp/bigDataPools/wocasparkpool",
+						"name": "wocasparkpool",
+						"type": "Spark",
+						"endpoint": "https://asa-woca-wsp.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/wocasparkpool",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.2",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 1
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"#Set the folder paths so that it can be used later. \r\n",
+							"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'\r\n",
+							"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
+							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"#Set the spark config to be able to get the partitioned columns year and month as string\r\n",
+							"spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							}
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"-- Create database to which we are going to write the data\r\n",
+							"\r\n",
+							"CREATE DATABASE IF NOT EXISTS nyc_taxi_ldw_spark\r\n",
+							"LOCATION 'abfss://nyc-taxi-data@asacourseteststaccdl.dfs.core.windows.net/gold/';"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Read the silver data to be processed. \r\n",
+							"individual_df = spark.read.parquet(f\"{silver_folder_path}/Individual\")\r\n",
+							"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
+							"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
+						],
+						"outputs": [],
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wocasparkpool')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 5
+				},
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 3,
+					"minNodeCount": 3
+				},
+				"nodeCount": 10,
+				"nodeSize": "Small",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.2",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": false,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "australiaeast"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/TransParquetToDelta')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "wocasparkpool",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "27d39466-e8ad-4214-adf6-3250e0ece430"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/6989b574-d03a-4106-a7f2-671a932ce49b/resourceGroups/asa-woca-rg/providers/Microsoft.Synapse/workspaces/asa-woca-wsp/bigDataPools/wocasparkpool",
+						"name": "wocasparkpool",
+						"type": "Spark",
+						"endpoint": "https://asa-woca-wsp.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/wocasparkpool",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.2",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 1
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Converting Parquet to Delta"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"# Convert unpartitioned Parquet table at path '<path-to-table>'\r\n",
+							"deltaTable_individual = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Individual`\")\r\n",
+							"deltaTable_family = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Family`\")\r\n",
+							"deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/FamilyMembership`\")\r\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 17
+					}
+				]
 			},
 			"dependsOn": []
 		}
