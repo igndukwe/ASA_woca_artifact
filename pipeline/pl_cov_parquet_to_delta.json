@@ -3,29 +3,48 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "NotebookTransParquetToDelta",
-				"type": "SynapseNotebook",
+				"name": "ForEach1",
+				"type": "ForEach",
 				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
 				"typeProperties": {
-					"notebook": {
-						"referenceName": "TransParquetToDelta",
-						"type": "NotebookReference"
-					},
-					"snapshot": true,
-					"sparkPool": {
-						"referenceName": "wocasparkpool",
-						"type": "BigDataPoolReference"
-					},
-					"executorSize": null,
-					"driverSize": null
+					"activities": [
+						{
+							"name": "NotebookTransParquetToDelta",
+							"type": "SynapseNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebook": {
+									"referenceName": "TransParquetToDelta",
+									"type": "NotebookReference"
+								},
+								"parameters": {
+									"file_path_param": {
+										"value": "",
+										"type": "string"
+									},
+									"folder_data_param": {
+										"value": "",
+										"type": "string"
+									}
+								},
+								"snapshot": true,
+								"sparkPool": {
+									"referenceName": "wocasparkpool",
+									"type": "BigDataPoolReference"
+								},
+								"executorSize": null,
+								"driverSize": null
+							}
+						}
+					]
 				}
 			}
 		],
