@@ -722,7 +722,7 @@
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "Execute Pipeline to extract data from db",
+								"activity": "Convert Parquet to Delta Format",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -732,6 +732,27 @@
 						"typeProperties": {
 							"pipeline": {
 								"referenceName": "pl_create_silver_tbl",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Convert Parquet to Delta Format",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline to extract data from db",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_cov_parquet_to_delta",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -747,7 +768,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]"
+				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta')]"
 			]
 		},
 		{
@@ -1833,7 +1855,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "f57905a6-93dc-4cda-8827-a2f5f1bf6aeb"
+						"spark.autotune.trackingId": "b41ca5c7-187e-4ff4-9fec-48e6251a11a4"
 					}
 				},
 				"metadata": {
@@ -1995,7 +2017,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "27d39466-e8ad-4214-adf6-3250e0ece430"
+						"spark.autotune.trackingId": "0024a5be-685d-4f2d-b19a-9eb7a2c0a0a1"
 					}
 				},
 				"metadata": {
@@ -2066,6 +2088,51 @@
 				]
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_cov_parquet_to_delta')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "NotebookTransParquetToDelta",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "TransParquetToDelta",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "wocasparkpool",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": null,
+							"conf": {},
+							"driverSize": null
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDelta')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
+			]
 		}
 	]
 }
