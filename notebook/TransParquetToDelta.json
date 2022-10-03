@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "0808a647-aa0e-460f-a1f4-7ff1073920b3"
+				"spark.autotune.trackingId": "14ae7c15-b074-4089-b6b4-f4eecca6e1d2"
 			}
 		},
 		"metadata": {
@@ -25,7 +25,7 @@
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
-				"display_name": "python"
+				"display_name": "Synapse PySpark"
 			},
 			"language_info": {
 				"name": "python"
@@ -49,14 +49,38 @@
 		},
 		"cells": [
 			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## File location"
+				]
+			},
+			{
 				"cell_type": "code",
 				"source": [
 					"#Set the folder paths so that it can be used later. \r\n",
-					"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'\r\n",
-					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
-					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
+					"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'"
 				],
-				"execution_count": null
+				"execution_count": 1
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Converting Parquet to Delta"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -72,36 +96,14 @@
 					}
 				},
 				"source": [
-					"#Set the spark config to be able to get the partitioned columns year and month as string\r\n",
-					"spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
+					"from delta.tables import *\r\n",
+					"# Convert unpartitioned Parquet table at path '<path-to-table>'\r\n",
+					"deltaTable_individual = DeltaTable.convertToDelta(spark, \"{bronze_folder_path}/Individual\")\r\n",
+					"deltaTable_family = DeltaTable.convertToDelta(spark, \"{bronze_folder_path}/Family\")\r\n",
+					"deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"{bronze_folder_path}/FamilyMembership\")\r\n",
+					""
 				],
-				"execution_count": null
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
-					"microsoft": {
-						"language": "sparksql"
-					}
-				},
-				"source": [
-					"%%sql\r\n",
-					"\r\n",
-					"-- Create database to which we are going to write the data\r\n",
-					"\r\n",
-					"CREATE DATABASE IF NOT EXISTS nyc_taxi_ldw_spark\r\n",
-					"LOCATION 'abfss://nyc-taxi-data@asacourseteststaccdl.dfs.core.windows.net/gold/';"
-				],
-				"execution_count": null
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -117,10 +119,7 @@
 					}
 				},
 				"source": [
-					"# Read the silver data to be processed. \r\n",
-					"individual_df = spark.read.parquet(f\"{silver_folder_path}/Individual\")\r\n",
-					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
-					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
+					""
 				],
 				"execution_count": null
 			}
