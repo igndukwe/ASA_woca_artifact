@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "d4d1d098-ceee-4366-bf91-6aa7a33e53df"
+				"spark.autotune.trackingId": "7e73fc7a-58dd-4497-b2c1-b4b36dfd2dec"
 			}
 		},
 		"metadata": {
@@ -72,32 +72,14 @@
 						"transient": {
 							"deleting": false
 						}
-					}
-				},
-				"source": [
-					"dbutils.widgets.text(name='folderPath', label='Folder Path')\r\n",
-					"dbutils.widgets.text(name='dataFolder', label='Data Folder')"
-				],
-				"execution_count": 4
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
 					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
+					"tags": [
+						"parameters"
+					]
 				},
 				"source": [
-					"folder_path = dbutils.widgets.get('folderPath')\r\n",
-					"data_folder = dbutils.widgets.get('dataFolder')\r\n",
-					"print(folder_path)\r\n",
-					"print(data_folder)"
+					"folder_path = ''\r\n",
+					"data_folder = ''"
 				],
 				"execution_count": null
 			},
