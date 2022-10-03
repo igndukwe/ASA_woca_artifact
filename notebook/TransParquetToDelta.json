@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "47131b6a-6cd4-4c79-91c5-5083ebbd3357"
+				"spark.autotune.trackingId": "2d482845-6c7e-4ff8-b883-529707c99c37"
 			}
 		},
 		"metadata": {
@@ -75,11 +75,33 @@
 					}
 				},
 				"source": [
+					"path = z.input(\"path\")\r\n",
+					"TablePath = z.input(\"dataFolder\")"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
 					"from delta.tables import *\r\n",
 					"# Convert unpartitioned Parquet table at path '<path-to-table>'\r\n",
-					"deltaTable_individual = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Individual`\")\r\n",
-					"deltaTable_family = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Family`\")\r\n",
-					"deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/FamilyMembership`\")\r\n",
+					"#deltaTable_individual = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Individual`\")\r\n",
+					"#deltaTable_family = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Family`\")\r\n",
+					"#deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/FamilyMembership`\")\r\n",
+					"\r\n",
+					"deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/{path}/{dataFolder}`\")\r\n",
+					"#print(f\"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/{anyi}`\")\r\n",
 					""
 				],
 				"execution_count": 17
