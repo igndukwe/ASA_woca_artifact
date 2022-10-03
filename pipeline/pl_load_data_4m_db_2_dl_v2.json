@@ -153,7 +153,7 @@
 									{
 										"type": "NonQuery",
 										"text": {
-											"value": "CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK 'bronze/@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'PARQUET' \n        ) AS [result];",
+											"value": "CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK 'bronze/@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'DELTA' \n        ) AS [result];",
 											"type": "Expression"
 										}
 									}

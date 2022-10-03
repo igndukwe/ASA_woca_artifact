@@ -5,7 +5,7 @@
 			"name": "2_bronze"
 		},
 		"content": {
-			"query": "/*\nThis is the procedure that the Stored procedure in the 'Pipelines/old/pl_load_data_4m_SQL_2_dl_v1' pipeline \ncalls in order to create views in the data lake gen2 virtual data wearhouse\n*/",
+			"query": "/*\nThis is the procedure that the Stored procedure in the 'Pipelines/old/pl_load_data_4m_SQL_2_dl_v1' pipeline \ncalls in order to create views in the data lake gen2 virtual data wearhouse\n\nNOTE: \nFORMAT = ''PARQUET''\nFORMAT = ''DELTA''\n*/",
 			"metadata": {
 				"language": "sql"
 			},
