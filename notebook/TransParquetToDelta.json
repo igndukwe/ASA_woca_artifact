@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "14ae7c15-b074-4089-b6b4-f4eecca6e1d2"
+				"spark.autotune.trackingId": "fcea7f5e-2083-4323-9574-c9dfd65fdb9b"
 			}
 		},
 		"metadata": {
@@ -65,9 +65,9 @@
 				"cell_type": "code",
 				"source": [
 					"#Set the folder paths so that it can be used later. \r\n",
-					"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'"
+					"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze'"
 				],
-				"execution_count": 1
+				"execution_count": 14
 			},
 			{
 				"cell_type": "markdown",
@@ -98,12 +98,12 @@
 				"source": [
 					"from delta.tables import *\r\n",
 					"# Convert unpartitioned Parquet table at path '<path-to-table>'\r\n",
-					"deltaTable_individual = DeltaTable.convertToDelta(spark, \"{bronze_folder_path}/Individual\")\r\n",
-					"deltaTable_family = DeltaTable.convertToDelta(spark, \"{bronze_folder_path}/Family\")\r\n",
-					"deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"{bronze_folder_path}/FamilyMembership\")\r\n",
+					"deltaTable_individual = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Individual`\")\r\n",
+					"deltaTable_family = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/Family`\")\r\n",
+					"deltaTable_family_membership = DeltaTable.convertToDelta(spark, \"parquet.`abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/FamilyMembership`\")\r\n",
 					""
 				],
-				"execution_count": 3
+				"execution_count": 17
 			},
 			{
 				"cell_type": "code",
