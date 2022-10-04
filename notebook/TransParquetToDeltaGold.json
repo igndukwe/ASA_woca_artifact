@@ -1,5 +1,5 @@
 {
-	"name": "TransParquetToDeltaBronze",
+	"name": "TransParquetToDeltaGold",
 	"properties": {
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "34c2efd9-7d78-4370-81fd-91a547f7db6e"
+				"spark.autotune.trackingId": "fce38fbb-2a69-4151-b9c9-0933d4e44647"
 			}
 		},
 		"metadata": {
@@ -58,7 +58,7 @@
 					}
 				},
 				"source": [
-					"Convert the Bronze Folder from Parquet to Delta Lake format"
+					"Convert the Gold Folder from Parquet to Delta Lake format"
 				]
 			},
 			{
@@ -76,7 +76,7 @@
 				},
 				"source": [
 					"from delta.tables import *\r\n",
-					"for folder in mssparkutils.fs.ls('abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'):\r\n",
+					"for folder in mssparkutils.fs.ls('abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'):\r\n",
 					"    deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`{folder.path}`\")\r\n",
 					"\r\n",
 					"    #print(folder)\r\n",
