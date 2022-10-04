@@ -2017,7 +2017,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "32dfe786-2546-49e1-8a86-149662570bb6"
+						"spark.autotune.trackingId": "cd2951c0-f8bb-4ca4-ad1e-87f20b2b7aee"
 					}
 				},
 				"metadata": {
@@ -2058,7 +2058,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": 1
+						"execution_count": 11
 					},
 					{
 						"cell_type": "code",
@@ -2078,7 +2078,7 @@
 							"spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 						],
 						"outputs": [],
-						"execution_count": 2
+						"execution_count": 12
 					},
 					{
 						"cell_type": "code",
@@ -2106,7 +2106,7 @@
 							"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 						],
 						"outputs": [],
-						"execution_count": 3
+						"execution_count": 13
 					},
 					{
 						"cell_type": "code",
@@ -2128,7 +2128,7 @@
 							"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 						],
 						"outputs": [],
-						"execution_count": 4
+						"execution_count": 14
 					},
 					{
 						"cell_type": "markdown",
@@ -2140,7 +2140,7 @@
 							}
 						},
 						"source": [
-							""
+							"## What are the individual age groups Counts"
 						]
 					},
 					{
@@ -2169,7 +2169,7 @@
 							"                        .orderBy('counts')"
 						],
 						"outputs": [],
-						"execution_count": 5
+						"execution_count": 15
 					},
 					{
 						"cell_type": "code",
@@ -2188,7 +2188,7 @@
 							"individual_agg_df.show(5)"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 16
 					},
 					{
 						"cell_type": "code",
@@ -2204,10 +2204,29 @@
 							}
 						},
 						"source": [
-							"individual_agg_df = individual_agg_df.drop()"
+							"individual_agg_df = individual_agg_df.dropna(how='any')"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 21
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"individual_agg_df.show(5)"
+						],
+						"outputs": [],
+						"execution_count": 22
 					},
 					{
 						"cell_type": "code",
@@ -2227,7 +2246,7 @@
 							"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 						],
 						"outputs": [],
-						"execution_count": 6
+						"execution_count": 23
 					},
 					{
 						"cell_type": "code",
@@ -2728,7 +2747,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "1f47484e-a129-45f6-acee-788ab8c11d35"
+						"spark.autotune.trackingId": "1b6d424d-bf49-4eaf-9657-cd97300f97ac"
 					}
 				},
 				"metadata": {
@@ -2784,6 +2803,26 @@
 			"properties": {
 				"content": {
 					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[individualagegroupcount]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw_spark",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[individual_age_group_count]",
 					"metadata": {
 						"language": "sql"
 					},
