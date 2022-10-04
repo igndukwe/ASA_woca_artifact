@@ -5,7 +5,7 @@
 			"name": "3_silver"
 		},
 		"content": {
-			"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n*/",
+			"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n\nstrategy, decision whanau journey\n*/",
 			"metadata": {
 				"language": "sql"
 			},
