@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "8abb9914-ad17-4ab3-8d27-d547038b3451"
+				"spark.autotune.trackingId": "494fac6b-cf79-4298-9a38-7061afe373f5"
 			}
 		},
 		"metadata": {
@@ -56,7 +56,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 36
+				"execution_count": 1
 			},
 			{
 				"cell_type": "code",
@@ -75,7 +75,7 @@
 					"#Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": 19
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -102,7 +102,7 @@
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
-				"execution_count": 38
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -123,7 +123,20 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": 21
+				"execution_count": 4
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
 			},
 			{
 				"cell_type": "code",
@@ -150,7 +163,43 @@
 					"                        .agg(count(lit(1)).alias('counts')) \\\r\n",
 					"                        .orderBy('counts')"
 				],
-				"execution_count": 30
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"individual_agg_df.show(5)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"individual_agg_df = individual_agg_df.drop()"
+				],
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -167,9 +216,9 @@
 				},
 				"source": [
 					"# Write the aggregated data to the gold table for consumption\r\n",
-					"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.IndividualAgeGroupCount\")"
+					"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 				],
-				"execution_count": 31
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",
