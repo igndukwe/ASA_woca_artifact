@@ -1879,7 +1879,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s4_2_primary_contact_dist_cnt_ext_tbl')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_4_primary_contact_dist_cnt_ext_tbl')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -1971,7 +1971,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/s4_4_family_top_cities')]",
+			"name": "[concat(parameters('workspaceName'), '/s4_2_family_top_cities')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -2060,7 +2060,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "6266c3a3-9fb3-4031-9bd0-5e2a27530771"
+						"spark.autotune.trackingId": "7b6f422e-8335-484b-8d5e-34b44b4599e9"
 					}
 				},
 				"metadata": {
@@ -2376,7 +2376,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "c1da9160-ec02-4c04-979d-35da19b581e2"
+						"spark.autotune.trackingId": "bd10d10e-bf51-4655-a81f-31595d7338a2"
 					}
 				},
 				"metadata": {
