@@ -16,7 +16,17 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"snapshot": true
+					"notebook": {
+						"referenceName": "TransParquetToDeltaBronze",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "wocasparkpool",
+						"type": "BigDataPoolReference"
+					},
+					"executorSize": null,
+					"driverSize": null
 				}
 			}
 		],
