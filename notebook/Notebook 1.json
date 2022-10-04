@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "6f5c3e8f-3cda-43fb-829d-2d5d8a5a1465"
+				"spark.autotune.trackingId": "243575f9-7d0a-44a2-b92f-a2c84e3d52e1"
 			}
 		},
 		"metadata": {
@@ -25,7 +25,7 @@
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
-				"display_name": "python"
+				"display_name": "Synapse PySpark"
 			},
 			"language_info": {
 				"name": "python"
@@ -56,7 +56,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": null
+				"execution_count": 14
 			},
 			{
 				"cell_type": "code",
@@ -75,7 +75,7 @@
 					"#Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": null
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
@@ -91,7 +91,8 @@
 					},
 					"microsoft": {
 						"language": "sparksql"
-					}
+					},
+					"collapsed": false
 				},
 				"source": [
 					"%%sql\r\n",
@@ -144,9 +145,9 @@
 					"from pyspark.sql.functions import *\r\n",
 					"\r\n",
 					"individual_agg_df = individual_df \\\r\n",
-					"                        .select(col(age_group_name).alias(age_groups)) \\\r\n",
-					"                        .groupBy(\"age_group_name\") \\\r\n",
-					"                        .agg(count(lit(1)).alias(\"counts\")).orderBy('counts')"
+					"                        .select(col('age_group_name').alias('age_groups')) \\\r\n",
+					"                        .groupBy('age_group_name') \\\r\n",
+					"                        .agg(count(lit(1)).alias('counts')).orderBy('counts')"
 				],
 				"execution_count": null
 			},
