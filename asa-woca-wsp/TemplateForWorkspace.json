@@ -2017,7 +2017,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "94c28ae2-372d-4fd8-bbf3-39ff05c93ae3"
+						"spark.autotune.trackingId": "0503b24f-b161-4dce-a2cc-f2028977f0b2"
 					}
 				},
 				"metadata": {
@@ -2025,7 +2025,7 @@
 					"enableDebugMode": false,
 					"kernelspec": {
 						"name": "synapse_pyspark",
-						"display_name": "python"
+						"display_name": "Synapse PySpark"
 					},
 					"language_info": {
 						"name": "python"
@@ -2058,7 +2058,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 14
 					},
 					{
 						"cell_type": "code",
@@ -2078,7 +2078,7 @@
 							"spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 15
 					},
 					{
 						"cell_type": "code",
@@ -2094,7 +2094,8 @@
 							},
 							"microsoft": {
 								"language": "sparksql"
-							}
+							},
+							"collapsed": false
 						},
 						"source": [
 							"%%sql\r\n",
@@ -2149,9 +2150,9 @@
 							"from pyspark.sql.functions import *\r\n",
 							"\r\n",
 							"individual_agg_df = individual_df \\\r\n",
-							"                        .select(col(age_group_name).alias(age_groups)) \\\r\n",
-							"                        .groupBy(\"age_group_name\") \\\r\n",
-							"                        .agg(count(lit(1)).alias(\"counts\")).orderBy('counts')"
+							"                        .select(col('age_group_name').alias('age_groups')) \\\r\n",
+							"                        .groupBy('age_group_name') \\\r\n",
+							"                        .agg(count(lit(1)).alias('counts')).orderBy('counts')"
 						],
 						"outputs": [],
 						"execution_count": null
