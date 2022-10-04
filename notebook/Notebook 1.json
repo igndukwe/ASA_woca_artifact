@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "e121122b-5cd3-454b-a8af-43d6cf8e5bf7"
+				"spark.autotune.trackingId": "75fb455f-fb93-44fb-b094-83097d800baf"
 			}
 		},
 		"metadata": {
@@ -139,6 +139,25 @@
 				]
 			},
 			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# import\r\n",
+					"from pyspark.sql.functions import *"
+				],
+				"execution_count": null
+			},
+			{
 				"cell_type": "markdown",
 				"metadata": {
 					"nteract": {
@@ -166,9 +185,7 @@
 				},
 				"source": [
 					"# Perform the required aggregations of the total age_group counts\r\n",
-					"from pyspark.sql.functions import *\r\n",
-					"\r\n",
-					"individual_agg_df = individual_df \\\r\n",
+					"idv_age_grp_cnt_df = individual_df \\\r\n",
 					"                        .select(col('age_group_name').alias('age_groups')) \\\r\n",
 					"                        .groupBy('age_groups') \\\r\n",
 					"                        .agg(count(lit(1)).alias('counts')) \\\r\n",
@@ -203,10 +220,70 @@
 					}
 				},
 				"source": [
-					"individual_agg_df = individual_agg_df.dropna(how='any')\r\n",
+					"idv_age_grp_cnt_df = idv_age_grp_cnt_df.dropna(how='any')\r\n",
 					"#individual_agg_df.show(5)"
 				],
 				"execution_count": 6
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# What are the top ten cities where families are based?"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"SELECT TOP 10\r\n",
+					"    city AS cities,\r\n",
+					"    COUNT(city) AS families\r\n",
+					"FROM silver.Family\r\n",
+					"WHERE city IS NOT NULL\r\n",
+					"GROUP BY city\r\n",
+					"ORDER BY families DESC;"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Perform the required aggregations of the total age_group counts\r\n",
+					"fam_top_ten_df = individual_df \\\r\n",
+					"                        .select(col('age_group_name').alias('age_groups')) \\\r\n",
+					"                        .groupBy('age_groups') \\\r\n",
+					"                        .agg(count(lit(1)).alias('counts')) \\\r\n",
+					"                        .orderBy('counts')"
+				],
+				"execution_count": null
 			},
 			{
 				"cell_type": "markdown",
@@ -242,6 +319,7 @@
 					"%%sql\r\n",
 					"\r\n",
 					"-- Create database to which we are going to write the data\r\n",
+					"-- note that the location is gold\r\n",
 					"\r\n",
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
@@ -258,8 +336,26 @@
 					}
 				},
 				"source": [
-					"### Write the aggregated data to the gold table for consumption "
+					"### Write the individual age group count as an external table & save in the gold partition in delta fmt for consumption "
 				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -277,7 +373,7 @@
 				"source": [
 					"# Write the aggregated data to the gold table for consumption\r\n",
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
-					"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
+					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 				],
 				"execution_count": 8
 			},

@@ -5,7 +5,7 @@
 			"name": "4_gold"
 		},
 		"content": {
-			"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- what are the top 10 cities where families hail\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyTopCities') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyTopCities\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyTopCities\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyTopCities',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT TOP 10\n    city AS cities,\n    COUNT(city) AS familiys\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY familiys DESC;",
+			"query": "-- CREATE EXTERNAL TABLES AS SELECT (CETAS)\n-- what are the top 10 cities where families hail\nUSE woca_ldw\nGO \n\nIF OBJECT_ID('gold.FamilyTopCities') IS NOT NULL\n    DROP EXTERNAL TABLE gold.FamilyTopCities\nGO\n\nCREATE EXTERNAL TABLE gold.FamilyTopCities\n    WITH\n    (\n        DATA_SOURCE = woca_data_src,\n        LOCATION = 'gold/FamilyTopCities',\n        FILE_FORMAT = parquet_file_format\n    )\nAS\nSELECT TOP 10\n    city AS cities,\n    COUNT(city) AS families\nFROM silver.Family\nWHERE city IS NOT NULL\nGROUP BY city\nORDER BY families DESC;",
 			"metadata": {
 				"language": "sql"
 			},
