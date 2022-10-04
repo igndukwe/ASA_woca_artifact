@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "e81da122-4463-4348-abf1-ca40a4b8bdd0"
+				"spark.autotune.trackingId": "8abb9914-ad17-4ab3-8d27-d547038b3451"
 			}
 		},
 		"metadata": {
@@ -45,7 +45,7 @@
 				"memory": 28,
 				"automaticScaleJobs": false
 			},
-			"sessionKeepAliveTimeout": 1
+			"sessionKeepAliveTimeout": 5
 		},
 		"cells": [
 			{
@@ -56,7 +56,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 18
+				"execution_count": 36
 			},
 			{
 				"cell_type": "code",
@@ -102,7 +102,7 @@
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
-				"execution_count": 20
+				"execution_count": 38
 			},
 			{
 				"cell_type": "code",
