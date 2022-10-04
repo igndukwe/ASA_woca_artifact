@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "c377f393-2812-4674-86e7-8fd6b7799708"
+				"spark.autotune.trackingId": "e3aa494a-a9b3-4513-9e09-9b02b5acfac7"
 			}
 		},
 		"metadata": {
@@ -98,8 +98,8 @@
 					"\r\n",
 					"-- Create database to which we are going to write the data\r\n",
 					"\r\n",
-					"CREATE DATABASE IF NOT EXISTS nyc_taxi_ldw_spark\r\n",
-					"LOCATION 'abfss://nyc-taxi-data@asacourseteststaccdl.dfs.core.windows.net/gold/';"
+					"CREATE DATABASE IF NOT EXISTS woca_ldw_nbk\r\n",
+					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
 				"execution_count": null
 			},
@@ -121,6 +121,51 @@
 					"individual_df = spark.read.parquet(f\"{silver_folder_path}/Individual\")\r\n",
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Perform the required aggregations\r\n",
+					"# 1. Total trip count\r\n",
+					"# 2. Total fare amount\r\n",
+					"from pyspark.sql.functions import *\r\n",
+					"\r\n",
+					"individual_agg_df = individual_df \\\r\n",
+					"                        .select(col(age_group_name).alias(age_groups)) \\\r\n",
+					"                        .groupBy(\"age_group_name\") \\\r\n",
+					"                        .agg(count(lit(1)).alias(\"counts\")).orderBy('counts')"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Write the aggregated data to the gold table for consumption\r\n",
+					"individual_agg_df.write.mode(\"overwrite\").partitionBy(\"year\", \"month\").format(\"parquet\").saveAsTable(\"nyc_taxi_ldw_spark.trip_data_green_agg\")"
 				],
 				"execution_count": null
 			}
