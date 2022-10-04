@@ -49,7 +49,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "pl_cov_parquet_to_delta",
+						"referenceName": "pl_cov_parquet_to_delta_bronze",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
@@ -58,9 +58,20 @@
 			{
 				"name": "Convert Silver Parquet to Delta Format",
 				"type": "ExecutePipeline",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline to create silver tbls",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_cov_parquet_to_delta_silver",
+						"type": "PipelineReference"
+					},
 					"waitOnCompletion": true
 				}
 			}
