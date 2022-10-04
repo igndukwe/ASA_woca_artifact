@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "9292a874-83d0-42ba-9db3-73307ae0d0c7"
+				"spark.autotune.trackingId": "10542655-d0c8-4c78-961c-bbe30b3371bc"
 			}
 		},
 		"metadata": {
@@ -152,9 +152,7 @@
 					}
 				},
 				"source": [
-					"# Perform the required aggregations\r\n",
-					"# 1. Total trip count\r\n",
-					"# 2. Total fare amount\r\n",
+					"# Perform the required aggregations of the total age_group counts\r\n",
 					"from pyspark.sql.functions import *\r\n",
 					"\r\n",
 					"individual_agg_df = individual_df \\\r\n",
@@ -179,9 +177,22 @@
 					}
 				},
 				"source": [
-					"individual_agg_df.show(5)"
+					"#individual_agg_df.show(5)"
 				],
 				"execution_count": 16
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Drop null values"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -215,9 +226,22 @@
 					}
 				},
 				"source": [
-					"individual_agg_df.show(5)"
+					"#individual_agg_df.show(5)"
 				],
 				"execution_count": 22
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Write the aggregated data to the gold table for consumption "
+				]
 			},
 			{
 				"cell_type": "code",
@@ -236,7 +260,7 @@
 					"# Write the aggregated data to the gold table for consumption\r\n",
 					"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 				],
-				"execution_count": 23
+				"execution_count": 24
 			},
 			{
 				"cell_type": "code",
