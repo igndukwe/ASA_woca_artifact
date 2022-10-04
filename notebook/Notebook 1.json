@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "8d15ee97-2a6d-40cc-b049-8730f0ba6e2f"
+				"spark.autotune.trackingId": "e121122b-5cd3-454b-a8af-43d6cf8e5bf7"
 			}
 		},
 		"metadata": {
@@ -69,7 +69,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 1
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -89,47 +89,7 @@
 					"# Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": null
-			},
-			{
-				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					"## Create database to which we are going to write the data"
-				]
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
-					"microsoft": {
-						"language": "sparksql"
-					},
-					"collapsed": false
-				},
-				"source": [
-					"%%sql\r\n",
-					"\r\n",
-					"-- Create database to which we are going to write the data\r\n",
-					"\r\n",
-					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
-					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
-				],
-				"execution_count": null
+				"execution_count": 3
 			},
 			{
 				"cell_type": "markdown",
@@ -163,7 +123,7 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": null
+				"execution_count": 4
 			},
 			{
 				"cell_type": "markdown",
@@ -214,7 +174,7 @@
 					"                        .agg(count(lit(1)).alias('counts')) \\\r\n",
 					"                        .orderBy('counts')"
 				],
-				"execution_count": null
+				"execution_count": 5
 			},
 			{
 				"cell_type": "markdown",
@@ -246,7 +206,47 @@
 					"individual_agg_df = individual_agg_df.dropna(how='any')\r\n",
 					"#individual_agg_df.show(5)"
 				],
-				"execution_count": null
+				"execution_count": 6
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Create database to which we are going to write the data"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"-- Create database to which we are going to write the data\r\n",
+					"\r\n",
+					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
+					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
+				],
+				"execution_count": 7
 			},
 			{
 				"cell_type": "markdown",
@@ -276,9 +276,10 @@
 				},
 				"source": [
 					"# Write the aggregated data to the gold table for consumption\r\n",
+					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 				],
-				"execution_count": null
+				"execution_count": 8
 			},
 			{
 				"cell_type": "code",
