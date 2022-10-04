@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "10542655-d0c8-4c78-961c-bbe30b3371bc"
+				"spark.autotune.trackingId": "0bbb4981-b09e-4f33-88aa-9518ef270034"
 			}
 		},
 		"metadata": {
@@ -135,7 +135,20 @@
 					}
 				},
 				"source": [
-					"## What are the individual age groups Counts"
+					"# What are the individual age groups?"
+				]
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Aggregate the total age_group counts"
 				]
 			},
 			{
@@ -191,7 +204,7 @@
 					}
 				},
 				"source": [
-					"## Drop null values"
+					"### Drop null values"
 				]
 			},
 			{
@@ -240,7 +253,7 @@
 					}
 				},
 				"source": [
-					"## Write the aggregated data to the gold table for consumption "
+					"### Write the aggregated data to the gold table for consumption "
 				]
 			},
 			{
