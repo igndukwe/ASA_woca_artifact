@@ -2017,7 +2017,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "ce381d89-da4c-4892-b1a4-5d021dc6681a"
+						"spark.autotune.trackingId": "94c28ae2-372d-4fd8-bbf3-39ff05c93ae3"
 					}
 				},
 				"metadata": {
@@ -2101,7 +2101,7 @@
 							"\r\n",
 							"-- Create database to which we are going to write the data\r\n",
 							"\r\n",
-							"CREATE DATABASE IF NOT EXISTS woca_ldw_nbk\r\n",
+							"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 							"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 						],
 						"outputs": [],
@@ -2171,7 +2171,7 @@
 						},
 						"source": [
 							"# Write the aggregated data to the gold table for consumption\r\n",
-							"individual_agg_df.write.mode(\"overwrite\").partitionBy(\"year\", \"month\").format(\"parquet\").saveAsTable(\"nyc_taxi_ldw_spark.trip_data_green_agg\")"
+							"individual_agg_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.IndividualAgeGroupCount\")"
 						],
 						"outputs": [],
 						"execution_count": null
