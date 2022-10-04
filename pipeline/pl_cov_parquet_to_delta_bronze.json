@@ -1,66 +1,6 @@
 {
 	"name": "pl_cov_parquet_to_delta_bronze",
 	"properties": {
-		"activities": [
-			{
-				"name": "ForEachBronzeDataPath",
-				"type": "ForEach",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@variables('folder_path_data_folder_array_var')",
-						"type": "Expression"
-					},
-					"isSequential": false,
-					"batchCount": 2,
-					"activities": [
-						{
-							"name": "NotebookTransParquetToDelta",
-							"type": "SynapseNotebook",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"notebook": {
-									"referenceName": "TransParquetToDelta",
-									"type": "NotebookReference"
-								},
-								"parameters": {
-									"folder_path_param": {
-										"value": {
-											"value": "@item().folder_path",
-											"type": "Expression"
-										},
-										"type": "string"
-									},
-									"data_folder": {
-										"value": {
-											"value": "@item().data_folder",
-											"type": "Expression"
-										},
-										"type": "string"
-									}
-								},
-								"snapshot": true,
-								"sparkPool": {
-									"referenceName": "wocasparkpool",
-									"type": "BigDataPoolReference"
-								},
-								"executorSize": null,
-								"driverSize": null
-							}
-						}
-					]
-				}
-			}
-		],
 		"variables": {
 			"folder_path_data_folder_array_var": {
 				"type": "Array",
