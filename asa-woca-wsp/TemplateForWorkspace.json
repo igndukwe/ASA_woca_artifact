@@ -722,7 +722,7 @@
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "Convert Parquet to Delta Format",
+								"activity": "Convert Bronze Parquet to Delta Format",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -739,7 +739,7 @@
 						}
 					},
 					{
-						"name": "Convert Parquet to Delta Format",
+						"name": "Convert Bronze Parquet to Delta Format",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
@@ -752,7 +752,28 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_cov_parquet_to_delta",
+								"referenceName": "pl_cov_parquet_to_delta_bronze",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Convert Silver Parquet to Delta Format",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline to create silver tbls",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_cov_parquet_to_delta_silver",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -769,7 +790,8 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
 				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta')]"
+				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_bronze')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_silver')]"
 			]
 		},
 		{
@@ -1107,7 +1129,7 @@
 					"name": "3_silver"
 				},
 				"content": {
-					"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n*/",
+					"query": "/*\n\nPerformed some column renaming for readability and datatypes adjustment to improve cost and performance \n\nstrategy, decision whanau journey\n*/",
 					"metadata": {
 						"language": "sql"
 					},
@@ -2017,7 +2039,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "3971a8fc-eb3d-42a4-b631-0abc58439766"
+						"spark.autotune.trackingId": "488e4b90-a434-4b85-a6cf-81a2835063c4"
 					}
 				},
 				"metadata": {
@@ -2129,7 +2151,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_cov_parquet_to_delta')]",
+			"name": "[concat(parameters('workspaceName'), '/pl_cov_parquet_to_delta_bronze')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -2200,8 +2222,117 @@
 				},
 				"variables": {
 					"folder_path_data_folder_array_var": {
-						"type": "String",
-						"defaultValue": "[ \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"Individual\" \t}, \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"FamilyMembership\" \t}, \t{ \t\t\"folder_path\": \"bronze\", \t\t\"data_folder\": \"Family\" \t} ]"
+						"type": "Array",
+						"defaultValue": [
+							{
+								"folder_path": "bronze",
+								"data_folder": "Individual"
+							},
+							{
+								"folder_path": "bronze",
+								"data_folder": "FamilyMembership"
+							},
+							{
+								"folder_path": "bronze",
+								"data_folder": "Family"
+							}
+						]
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDelta')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_cov_parquet_to_delta_silver')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachBronzeDataPath",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('folder_path_data_folder_array_var')",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 2,
+							"activities": [
+								{
+									"name": "NotebookTransParquetToDelta",
+									"type": "SynapseNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebook": {
+											"referenceName": "TransParquetToDelta",
+											"type": "NotebookReference"
+										},
+										"parameters": {
+											"folder_path_param": {
+												"value": {
+													"value": "@item().folder_path",
+													"type": "Expression"
+												},
+												"type": "string"
+											},
+											"data_folder": {
+												"value": {
+													"value": "@item().data_folder",
+													"type": "Expression"
+												},
+												"type": "string"
+											}
+										},
+										"snapshot": true,
+										"sparkPool": {
+											"referenceName": "wocasparkpool",
+											"type": "BigDataPoolReference"
+										},
+										"executorSize": null,
+										"conf": {},
+										"driverSize": null
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"folder_path_data_folder_array_var": {
+						"type": "Array",
+						"defaultValue": [
+							{
+								"folder_path": "silver",
+								"data_folder": "Individual"
+							},
+							{
+								"folder_path": "silver",
+								"data_folder": "FamilyMembership"
+							},
+							{
+								"folder_path": "silver",
+								"data_folder": "Family"
+							}
+						]
 					}
 				},
 				"annotations": []
