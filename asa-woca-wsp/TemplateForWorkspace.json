@@ -2039,7 +2039,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "bea3839f-085a-4ae2-a81e-939adf465432"
+						"spark.autotune.trackingId": "62afad89-fafc-4376-b780-b2b00e1cad43"
 					}
 				},
 				"metadata": {
@@ -2341,6 +2341,192 @@
 				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDelta')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/TransParquetToDeltaBronze')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "wocasparkpool",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "3db65851-0300-4a64-be02-2986060a0f6b"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/6989b574-d03a-4106-a7f2-671a932ce49b/resourceGroups/asa-woca-rg/providers/Microsoft.Synapse/workspaces/asa-woca-wsp/bigDataPools/wocasparkpool",
+						"name": "wocasparkpool",
+						"type": "Spark",
+						"endpoint": "https://asa-woca-wsp.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/wocasparkpool",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.2",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 1
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"Convert the Bronze Folder from Parquet to Delta Lake format"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"for folder in mssparkutils.fs.ls('abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'):\r\n",
+							"    deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`{folder.path}`\")\r\n",
+							"\r\n",
+							"    #print(folder)\r\n",
+							"    #print(folder.path)"
+						],
+						"outputs": [],
+						"execution_count": 13
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/TransParquetToDeltaBronze_Copy1')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "wocasparkpool",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "3db65851-0300-4a64-be02-2986060a0f6b"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/6989b574-d03a-4106-a7f2-671a932ce49b/resourceGroups/asa-woca-rg/providers/Microsoft.Synapse/workspaces/asa-woca-wsp/bigDataPools/wocasparkpool",
+						"name": "wocasparkpool",
+						"type": "Spark",
+						"endpoint": "https://asa-woca-wsp.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/wocasparkpool",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.2",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 1
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"Convert the Bronze Folder from Parquet to Delta Lake format"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"for folder in mssparkutils.fs.ls('abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'):\r\n",
+							"    deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`{folder.path}`\")\r\n",
+							"\r\n",
+							"    #print(folder)\r\n",
+							"    #print(folder.path)"
+						],
+						"outputs": [],
+						"execution_count": 13
+					}
+				]
+			},
+			"dependsOn": []
 		}
 	]
 }
