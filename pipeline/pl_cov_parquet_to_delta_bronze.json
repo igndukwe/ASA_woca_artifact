@@ -1,6 +1,25 @@
 {
 	"name": "pl_cov_parquet_to_delta_bronze",
 	"properties": {
+		"activities": [
+			{
+				"name": "nb_tran_parquet_to_delta_bronze",
+				"description": "Notebook transforms data in the bronze folder from parquet to delter",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"snapshot": true
+				}
+			}
+		],
 		"variables": {
 			"folder_path_data_folder_array_var": {
 				"type": "Array",
