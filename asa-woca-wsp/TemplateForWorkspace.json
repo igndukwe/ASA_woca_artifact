@@ -2039,7 +2039,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "cd87e997-3407-41e5-9bdf-b8b037d79924"
+						"spark.autotune.trackingId": "4fa7e5a7-8d3b-4fa0-aad9-ce25ff241e76"
 					}
 				},
 				"metadata": {
@@ -2157,62 +2157,31 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "ForEachBronzeDataPath",
-						"type": "ForEach",
+						"name": "nb_tran_parquet_to_delta_bronze",
+						"description": "Notebook transforms data in the bronze folder from parquet to delter",
+						"type": "SynapseNotebook",
 						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"items": {
-								"value": "@variables('folder_path_data_folder_array_var')",
-								"type": "Expression"
+							"notebook": {
+								"referenceName": "TransParquetToDeltaBronze",
+								"type": "NotebookReference"
 							},
-							"isSequential": false,
-							"batchCount": 2,
-							"activities": [
-								{
-									"name": "NotebookTransParquetToDelta",
-									"type": "SynapseNotebook",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"notebook": {
-											"referenceName": "TransParquetToDelta",
-											"type": "NotebookReference"
-										},
-										"parameters": {
-											"folder_path_param": {
-												"value": {
-													"value": "@item().folder_path",
-													"type": "Expression"
-												},
-												"type": "string"
-											},
-											"data_folder": {
-												"value": {
-													"value": "@item().data_folder",
-													"type": "Expression"
-												},
-												"type": "string"
-											}
-										},
-										"snapshot": true,
-										"sparkPool": {
-											"referenceName": "wocasparkpool",
-											"type": "BigDataPoolReference"
-										},
-										"executorSize": null,
-										"conf": {},
-										"driverSize": null
-									}
-								}
-							]
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "wocasparkpool",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": null,
+							"conf": {},
+							"driverSize": null
 						}
 					}
 				],
@@ -2242,7 +2211,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDelta')]",
+				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDeltaBronze')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
 			]
 		},
@@ -2253,62 +2222,31 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "ForEachBronzeDataPath",
-						"type": "ForEach",
+						"name": "nb_tran_parquet_to_delta_silver",
+						"description": "Notebook transforms data in the  silver folder from parquet to delter",
+						"type": "SynapseNotebook",
 						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"items": {
-								"value": "@variables('folder_path_data_folder_array_var')",
-								"type": "Expression"
+							"notebook": {
+								"referenceName": "TransParquetToDeltaSilver",
+								"type": "NotebookReference"
 							},
-							"isSequential": false,
-							"batchCount": 3,
-							"activities": [
-								{
-									"name": "NotebookTransParquetToDelta",
-									"type": "SynapseNotebook",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"notebook": {
-											"referenceName": "TransParquetToDelta",
-											"type": "NotebookReference"
-										},
-										"parameters": {
-											"folder_path_param": {
-												"value": {
-													"value": "@item().folder_path",
-													"type": "Expression"
-												},
-												"type": "string"
-											},
-											"data_folder": {
-												"value": {
-													"value": "@item().data_folder",
-													"type": "Expression"
-												},
-												"type": "string"
-											}
-										},
-										"snapshot": true,
-										"sparkPool": {
-											"referenceName": "wocasparkpool",
-											"type": "BigDataPoolReference"
-										},
-										"executorSize": null,
-										"conf": {},
-										"driverSize": null
-									}
-								}
-							]
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "wocasparkpool",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": null,
+							"conf": {},
+							"driverSize": null
 						}
 					}
 				],
@@ -2338,8 +2276,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDelta')]",
-				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
+				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]",
+				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDeltaSilver')]"
 			]
 		},
 		{
@@ -2363,7 +2301,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "c1d23733-d848-4253-974e-e8add30de05b"
+						"spark.autotune.trackingId": "6dd1654a-9adf-4a4d-963d-725264ccd634"
 					}
 				},
 				"metadata": {
@@ -2456,7 +2394,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "e18bc666-a147-417f-a47c-e2e58b352bfa"
+						"spark.autotune.trackingId": "f33d2312-38b4-4c04-826b-4c27bb67db76"
 					}
 				},
 				"metadata": {
@@ -2549,7 +2487,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "f3ab1c37-84b3-4dff-8b1d-5ff23816ae7c"
+						"spark.autotune.trackingId": "1b8e685d-6df2-40c8-a3ab-332ac4147f3e"
 					}
 				},
 				"metadata": {
