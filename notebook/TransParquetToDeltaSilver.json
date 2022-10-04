@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "bfe734fa-1080-4c9f-9030-1a52a700f3b8"
+				"spark.autotune.trackingId": "d270728f-6e30-4f64-a741-bf82ef6d7df5"
 			}
 		},
 		"metadata": {
@@ -58,7 +58,7 @@
 					}
 				},
 				"source": [
-					"Convert the Bronze Folder from Parquet to Delta Lake format"
+					"## Convert the Silver Folder from Parquet to Delta Lake format"
 				]
 			},
 			{
