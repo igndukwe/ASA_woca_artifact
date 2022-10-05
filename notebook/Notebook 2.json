@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "0fd86280-ddc6-49ab-bb4d-a3177727b3ee"
+				"spark.autotune.trackingId": "e6863408-a435-4c39-b52b-2dccb8b1e5e8"
 			}
 		},
 		"metadata": {
@@ -59,7 +59,7 @@
 					"%%pyspark\n",
 					"spark.sql(\"DROP DATABASE IF EXISTS woca_ldw_spark CASCADE\")"
 				],
-				"execution_count": 2
+				"execution_count": 1
 			}
 		]
 	}

@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "3f9e4865-783a-4fbc-bc47-f6b6b683bf92"
+				"spark.autotune.trackingId": "a7a02ab3-b651-471e-b8c0-aeee54d814fa"
 			}
 		},
 		"metadata": {
@@ -89,7 +89,7 @@
 					"# Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": null
+				"execution_count": 151
 			},
 			{
 				"cell_type": "markdown",
@@ -123,7 +123,7 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": null
+				"execution_count": 152
 			},
 			{
 				"cell_type": "markdown",
@@ -135,7 +135,7 @@
 					}
 				},
 				"source": [
-					"# What are the individual age groups?"
+					"# Perform Aggregations"
 				]
 			},
 			{
@@ -155,7 +155,7 @@
 					"# import\r\n",
 					"from pyspark.sql.functions import *"
 				],
-				"execution_count": null
+				"execution_count": 153
 			},
 			{
 				"cell_type": "markdown",
@@ -167,7 +167,7 @@
 					}
 				},
 				"source": [
-					"### Aggregate the total age_group counts"
+					"### What are the individual age groups"
 				]
 			},
 			{
@@ -192,7 +192,7 @@
 					"                        .orderBy('counts') \\\r\n",
 					"                        .dropna(how='any') # Drop null values"
 				],
-				"execution_count": null
+				"execution_count": 154
 			},
 			{
 				"cell_type": "code",
@@ -210,7 +210,7 @@
 				"source": [
 					"#idv_age_grp_cnt_df.show(5)"
 				],
-				"execution_count": null
+				"execution_count": 155
 			},
 			{
 				"cell_type": "markdown",
@@ -248,7 +248,7 @@
 					"                        .dropna(how='any') \\\r\n",
 					"                        .limit(10)"
 				],
-				"execution_count": null
+				"execution_count": 156
 			},
 			{
 				"cell_type": "markdown",
@@ -286,7 +286,7 @@
 					"                    .orderBy(col('counts').desc()) \\\r\n",
 					"                    .dropna(how='any')"
 				],
-				"execution_count": null
+				"execution_count": 157
 			},
 			{
 				"cell_type": "code",
@@ -319,7 +319,64 @@
 					"#idv_fam_relnship_fam_df.printSchema()\r\n",
 					"#idv_fam_relnship_fam_df.show(10)"
 				],
-				"execution_count": null
+				"execution_count": 158
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## What is the distribution of individual family membership?"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"fam_mem_dist = individual_df \\\r\n",
+					"                .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
+					"                .groupBy('individual') \\\r\n",
+					"                .agg(count(lit(1)).alias('counts')) \\\r\n",
+					"                .select('counts')\\\r\n",
+					"                .distinct() \\\r\n",
+					"                .orderBy(col('counts').desc()) \\\r\n",
+					"                .dropna(how='any')\r\n",
+					"# fam_mem_dist.show()"
+				],
+				"execution_count": 175
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": 176
 			},
 			{
 				"cell_type": "markdown",
@@ -360,7 +417,7 @@
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
-				"execution_count": null
+				"execution_count": 159
 			},
 			{
 				"cell_type": "markdown",
@@ -393,7 +450,7 @@
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 				],
-				"execution_count": null
+				"execution_count": 160
 			},
 			{
 				"cell_type": "code",
@@ -413,7 +470,7 @@
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_top_ten_cities\")"
 				],
-				"execution_count": null
+				"execution_count": 161
 			},
 			{
 				"cell_type": "code",
@@ -430,9 +487,30 @@
 				},
 				"source": [
 					"#family_relationship\r\n",
-					"# Write the top ten cities data where families hail in delta fmt \r\n",
+					"# Write the individual family relationships in delta fmt \r\n",
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
-					"idv_fam_relnship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_relationship\")"
+					"idv_fam_relnship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_ship\")"
+				],
+				"execution_count": 162
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#family_relationship\r\n",
+					"# Write the family membership distribution in delta fmt \r\n",
+					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
+					"fam_mem_dist.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_mem_dist\")"
 				],
 				"execution_count": null
 			}
