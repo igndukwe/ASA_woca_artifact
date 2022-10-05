@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "21311d65-8850-4d64-9851-2c6b612131c3"
+				"spark.autotune.trackingId": "49eb813d-8485-48df-a20c-1bac88fdc121"
 			}
 		},
 		"metadata": {
@@ -260,7 +260,124 @@
 					}
 				},
 				"source": [
-					"### Create database to which we are going to write the data"
+					"## How many individuals are related to a family?"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"fam_relnship_df = individual_df \\\r\n",
+					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
+					"                    .join(family_df, family_df.family_id == 'family') \\\r\n",
+					"                    .select(col('family_relationship')) \\\r\n",
+					"                    .groupBy('family_relationship') \\\r\n",
+					"                    .agg(count(lit(1)).alias('counts')) \\\r\n",
+					"                    .orderBy(col('counts').desc()) \\\r\n",
+					"                    .dropna(how='any')"
+				],
+				"execution_count": 117
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"idv_fam_relnship_df = individual_df \\\r\n",
+					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)"
+				],
+				"execution_count": 123
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"idv_fam_relnship_fam_df = idv_fam_relnship_df \\\r\n",
+					"                    .join(family_df, idv_fam_relnship_df.family == family_df.family_id) \\\r\n",
+					"                    .select(col('family_relationship')) \\\r\n",
+					"                    .groupBy('family_relationship') \\\r\n",
+					"                    .agg(count(lit(1)).alias('counts')) \\\r\n",
+					"                    .orderBy(col('counts').desc()) \\\r\n",
+					"                    .dropna(how='any')"
+				],
+				"execution_count": 130
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"idv_fam_relnship_fam_df.printSchema()"
+				],
+				"execution_count": 131
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"idv_fam_relnship_fam_df.show(10)"
+				],
+				"execution_count": 133
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Create database to which we are going to write the data"
 				]
 			},
 			{
@@ -343,6 +460,27 @@
 					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_top_ten_cities\")"
 				],
 				"execution_count": 100
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#family_relationship\r\n",
+					"# Write the top ten cities data where families hail in delta fmt \r\n",
+					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
+					"idv_fam_relnship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_relationship\")"
+				],
+				"execution_count": null
 			}
 		]
 	}
