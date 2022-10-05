@@ -19,6 +19,12 @@
 				"startTime": "2022-10-06T12:50:00",
 				"timeZone": "New Zealand Standard Time",
 				"schedule": {
+					"minutes": [
+						55
+					],
+					"hours": [
+						12
+					],
 					"weekDays": [
 						"Thursday"
 					]
