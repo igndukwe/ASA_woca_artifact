@@ -17,7 +17,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebook": {
-						"referenceName": "TransParquetToDeltaSilver",
+						"referenceName": "trans_silver_parquet_to_delta",
 						"type": "NotebookReference"
 					},
 					"snapshot": true,

@@ -1,5 +1,5 @@
 {
-	"name": "Create_gold_tbls",
+	"name": "create_gold_tbls",
 	"properties": {
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "29972cf6-13c8-46b8-a1cc-6a05295cb025"
+				"spark.autotune.trackingId": "393f9621-919a-4405-a7b1-02342f252298"
 			}
 		},
 		"metadata": {
