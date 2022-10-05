@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "e5d787c4-a948-4ade-91be-459dc0b2f7ba"
+				"spark.autotune.trackingId": "3a4fc1db-f7cb-4897-9d04-d4d4d8744007"
 			}
 		},
 		"metadata": {
@@ -289,12 +289,8 @@
 				"execution_count": 25
 			},
 			{
-				"cell_type": "code",
+				"cell_type": "markdown",
 				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
 					"nteract": {
 						"transient": {
 							"deleting": false
@@ -302,36 +298,38 @@
 					}
 				},
 				"source": [
+					"## What is the top five distributions of FamilyMembership in one primary contact?"
+				]
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"```\r\n",
+					"## What is the distribution of individual family membership?\r\n",
 					"# Joining 3 tables (Individual, Family and Family Membershiop)\r\n",
 					"# 1st join the Individual table with the Family table\r\n",
-					"## idv_fam_relnship_df = individual_df \\\r\n",
-					"##                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)\r\n",
+					"idv_fam_relnship_df = individual_df \\\r\n",
+					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)\r\n",
 					"\r\n",
 					"# 2nd add the family table to the combination \r\n",
-					"## idv_fam_relnship_fam_df = idv_fam_relnship_df \\\r\n",
-					"##                    .join(family_df, idv_fam_relnship_df.family == family_df.family_id) \\\r\n",
-					"##                    .select(col('family_relationship')) \\\r\n",
-					"##                    .groupBy('family_relationship') \\\r\n",
-					"##                    .agg(count(lit(1)).alias('counts')) \\\r\n",
-					"##                    .orderBy(col('counts').desc()) \\\r\n",
-					"##                    .dropna(how='any')\r\n",
+					"idv_fam_relnship_fam_df = idv_fam_relnship_df \\\r\n",
+					"                    .join(family_df, idv_fam_relnship_df.family == family_df.family_id) \\\r\n",
+					"                    .select(col('family_relationship')) \\\r\n",
+					"                    .groupBy('family_relationship') \\\r\n",
+					"                    .agg(count(lit(1)).alias('counts')) \\\r\n",
+					"                    .orderBy(col('counts').desc()) \\\r\n",
+					"                    .dropna(how='any')\r\n",
 					"\r\n",
-					"#idv_fam_relnship_fam_df.printSchema()\r\n",
-					"#idv_fam_relnship_fam_df.show(10)"
-				],
-				"execution_count": 26
-			},
-			{
-				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					""
+					"idv_fam_relnship_fam_df.printSchema()\r\n",
+					"idv_fam_relnship_fam_df.show(10)\r\n",
+					"```"
 				]
 			},
 			{
@@ -344,23 +342,8 @@
 					}
 				},
 				"source": [
-					"## What is the distribution of individual family membership?"
-				]
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
+					"```\r\n",
+					"## What is the distribution of individual family membership?\r\n",
 					"fam_mem_dist = individual_df \\\r\n",
 					"                .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
 					"                .groupBy('individual') \\\r\n",
@@ -369,9 +352,37 @@
 					"                .distinct() \\\r\n",
 					"                .orderBy(col('counts').desc()) \\\r\n",
 					"                .dropna(how='any')\r\n",
-					"# fam_mem_dist.show()"
+					"# fam_mem_dist.show()\r\n",
+					"```"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## How many top five FamilyMembership are in one primary contact? (distributions)\r\n",
+					"fam_prim_cont = family_df \\\r\n",
+					"                .join(family_membership_df, family_df.family_id == family_membership_df.individual) \\\r\n",
+					"                .groupBy('primary_contact') \\\r\n",
+					"                .agg(count(lit(1)).alias('counts')) \\\r\n",
+					"                .select('counts')\\\r\n",
+					"                .distinct() \\\r\n",
+					"                .orderBy(col('counts').desc()) \\\r\n",
+					"                .dropna(how='any') \\\r\n",
+					"                .limit(5)\r\n",
+					"fam_prim_cont.show()"
 				],
-				"execution_count": 27
+				"execution_count": null
 			},
 			{
 				"cell_type": "markdown",
@@ -424,7 +435,8 @@
 					}
 				},
 				"source": [
-					"### Write data to an external table & save in the gold partition for consumption "
+					"### Write data to an external table & save in the gold partition for consumption \r\n",
+					"- note that the databasr woca_ldw_spark has got a default location of"
 				]
 			},
 			{
@@ -441,8 +453,7 @@
 					}
 				},
 				"source": [
-					"# Write the individual age group count data in delta fmt \r\n",
-					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
+					"# Write data in delta fmt\r\n",
 					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_group_count\")"
 				],
 				"execution_count": 29
@@ -461,8 +472,7 @@
 					}
 				},
 				"source": [
-					"# Write the top ten cities data where families hail in delta fmt \r\n",
-					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
+					"# Write data in delta fmt \r\n",
 					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 				],
 				"execution_count": 30
@@ -481,9 +491,7 @@
 					}
 				},
 				"source": [
-					"#family_relationship\r\n",
-					"# Write the individual family relationships in delta fmt \r\n",
-					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
+					"# Write data in delta fmt  \r\n",
 					"idv_fam_relnship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_ship\")"
 				],
 				"execution_count": 31
@@ -502,10 +510,8 @@
 					}
 				},
 				"source": [
-					"#family_relationship\r\n",
-					"# Write the family membership distribution in delta fmt \r\n",
-					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
-					"fam_mem_dist.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_mem_dist\")"
+					"# Write data in delta fmt  \r\n",
+					"fam_prim_cont.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_prim_cont\")"
 				],
 				"execution_count": 32
 			},
