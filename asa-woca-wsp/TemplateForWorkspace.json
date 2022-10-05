@@ -53,7 +53,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"notebook": {
-								"referenceName": "TransParquetToDeltaBronze",
+								"referenceName": "trans_bronze_parquet_to_delta",
 								"type": "NotebookReference"
 							},
 							"snapshot": true,
@@ -98,7 +98,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDeltaBronze')]",
+				"[concat(variables('workspaceId'), '/notebooks/trans_bronze_parquet_to_delta')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
 			]
 		},
@@ -123,7 +123,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"notebook": {
-								"referenceName": "TransParquetToDeltaSilver",
+								"referenceName": "trans_silver_parquet_to_delta",
 								"type": "NotebookReference"
 							},
 							"snapshot": true,
@@ -168,7 +168,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/TransParquetToDeltaSilver')]",
+				"[concat(variables('workspaceId'), '/notebooks/trans_silver_parquet_to_delta')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
 			]
 		},
@@ -193,7 +193,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"notebook": {
-								"referenceName": "Create_gold_tbls",
+								"referenceName": "create_gold_tbls",
 								"type": "NotebookReference"
 							},
 							"snapshot": true,
@@ -219,7 +219,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/Create_gold_tbls')]",
+				"[concat(variables('workspaceId'), '/notebooks/create_gold_tbls')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
 			]
 		},
@@ -2093,7 +2093,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Create_gold_tbls')]",
+			"name": "[concat(parameters('workspaceName'), '/create_gold_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -2113,7 +2113,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "cf6ee716-8069-4033-8402-119a0c14072c"
+						"spark.autotune.trackingId": "28b59110-5288-4eab-b1fc-fecd35033511"
 					}
 				},
 				"metadata": {
@@ -2734,7 +2734,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "d89b346f-7088-44cf-821b-6f1991c70989"
+						"spark.autotune.trackingId": "8f74c065-455d-4e4e-8b4c-eafb67cbdb69"
 					}
 				},
 				"metadata": {
@@ -2790,7 +2790,7 @@
 							"spark.sql(\"DROP DATABASE IF EXISTS woca_ldw_spark CASCADE\")"
 						],
 						"outputs": [],
-						"execution_count": 7
+						"execution_count": 1
 					},
 					{
 						"cell_type": "markdown",
@@ -2823,7 +2823,7 @@
 							"mssparkutils.session.stop()"
 						],
 						"outputs": [],
-						"execution_count": 8
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2849,7 +2849,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/TransParquetToDelta')]",
+			"name": "[concat(parameters('workspaceName'), '/trans_parquet_to_delta')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -2869,7 +2869,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "5f357946-4ed0-430b-98d1-58c32600062a"
+						"spark.autotune.trackingId": "63b7feb2-2722-4544-9378-46accd41858a"
 					}
 				},
 				"metadata": {
@@ -2894,7 +2894,8 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 1
 				},
@@ -2980,7 +2981,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/TransParquetToDeltaBronze')]",
+			"name": "[concat(parameters('workspaceName'), '/trans_bronze_parquet_to_delta')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -3072,7 +3073,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/TransParquetToDeltaGold')]",
+			"name": "[concat(parameters('workspaceName'), '/trans_gold_parquet_to_delta')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -3164,7 +3165,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/TransParquetToDeltaSilver')]",
+			"name": "[concat(parameters('workspaceName'), '/trans_silver_parquet_to_delta')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
