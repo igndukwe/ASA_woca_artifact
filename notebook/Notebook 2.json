@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "3bd82fc5-1781-467c-a056-5e2cb8c8a552"
+				"spark.autotune.trackingId": "017c3d31-803a-4e38-a61d-cc9e2bf85863"
 			}
 		},
 		"metadata": {
@@ -104,7 +104,7 @@
 					"# Auto stop the spark pool\r\n",
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": null
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",
