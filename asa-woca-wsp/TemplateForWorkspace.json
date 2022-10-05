@@ -40,7 +40,7 @@
 				"activities": [
 					{
 						"name": "nb_tran_parquet_to_delta_bronze",
-						"description": "Notebook transforms data in the bronze folder from parquet to delter",
+						"description": "Notebook transforms data in the bronze folder from parquet to delta",
 						"type": "SynapseNotebook",
 						"dependsOn": [],
 						"policy": {
@@ -110,7 +110,7 @@
 				"activities": [
 					{
 						"name": "nb_tran_parquet_to_delta_silver",
-						"description": "Notebook transforms data in the  silver folder from parquet to delter",
+						"description": "Notebook transforms data in the  silver folder from parquet to delta",
 						"type": "SynapseNotebook",
 						"dependsOn": [],
 						"policy": {
@@ -173,7 +173,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_create_silver_tbl')]",
+			"name": "[concat(parameters('workspaceName'), '/pl_create_silver_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -871,7 +871,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_create_silver_tbl",
+								"referenceName": "pl_create_silver_tbls",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -919,6 +919,27 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "Execute Pipeline to create gold tbls",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Convert Silver Parquet to Delta Format",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_create_gold_tbls",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -929,9 +950,10 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbl')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbls')]",
 				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_bronze')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_silver')]"
+				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_silver')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl_create_gold_tbls')]"
 			]
 		},
 		{
@@ -2020,7 +2042,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Notebook 1')]",
+			"name": "[concat(parameters('workspaceName'), '/Create_gold_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -2040,7 +2062,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "d4945029-6417-4ae0-b84c-1fcff0bff9f1"
+						"spark.autotune.trackingId": "2588e733-692e-4cfe-b816-dab9693d5849"
 					}
 				},
 				"metadata": {
@@ -2661,7 +2683,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "edd549d3-10b3-4465-ae9d-39435514d95e"
+						"spark.autotune.trackingId": "a046da28-760a-4860-8e0d-d0dc44ea5602"
 					}
 				},
 				"metadata": {
@@ -3206,6 +3228,52 @@
 			},
 			"dependsOn": [],
 			"location": "australiaeast"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_create_gold_tbls')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "nb_create_gold_tbls",
+						"description": "Notebook creates gold tables and transforms data in the gold folder from to delta",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Create_gold_tbls",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "wocasparkpool",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": null,
+							"conf": {},
+							"driverSize": null
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/Create_gold_tbls')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
+			]
 		}
 	]
 }
