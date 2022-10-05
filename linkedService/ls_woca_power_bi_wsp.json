@@ -1,0 +1,11 @@
+{
+	"name": "ls_woca_power_bi_wsp",
+	"properties": {
+		"annotations": [],
+		"type": "PowerBIWorkspace",
+		"typeProperties": {
+			"workspaceID": "1afce304-cd27-4d08-a0b3-269e940f82dd",
+			"tenantID": "865c4c90-6099-4d1b-af3d-46fb27d6958e"
+		}
+	}
+}
