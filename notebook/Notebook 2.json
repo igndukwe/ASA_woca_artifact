@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "a994526e-22f1-447e-a37b-6bebc0904a9a"
+				"spark.autotune.trackingId": "02177068-5b8a-443f-ba91-0dc09f7ec8cc"
 			}
 		},
 		"metadata": {
@@ -59,7 +59,44 @@
 					"%%pyspark\n",
 					"spark.sql(\"DROP DATABASE IF EXISTS woca_ldw_spark CASCADE\")"
 				],
-				"execution_count": 1
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Auto stop the spark pool\r\n",
+					"mssparkutils.session.stop()"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": null
 			}
 		]
 	}
