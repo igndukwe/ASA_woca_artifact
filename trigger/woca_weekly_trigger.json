@@ -16,11 +16,11 @@
 			"recurrence": {
 				"frequency": "Week",
 				"interval": 1,
-				"startTime": "2022-10-06T00:27:00",
+				"startTime": "2022-10-06T12:40:00",
 				"timeZone": "New Zealand Standard Time",
 				"schedule": {
 					"weekDays": [
-						"Friday"
+						"Thursday"
 					]
 				}
 			}
