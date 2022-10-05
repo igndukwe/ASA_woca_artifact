@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "1f67fafa-5d56-4ada-9e9a-667ef46fc341"
+				"spark.autotune.trackingId": "6c72da42-f276-4cac-9fe2-1730583e2c28"
 			}
 		},
 		"metadata": {
@@ -448,7 +448,7 @@
 				"source": [
 					"# Write the individual age group count data in delta fmt \r\n",
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
-					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
+					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_group_count\")"
 				],
 				"execution_count": 12
 			},
@@ -468,7 +468,7 @@
 				"source": [
 					"# Write the top ten cities data where families hail in delta fmt \r\n",
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
-					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_top_ten_cities\")"
+					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 				],
 				"execution_count": 13
 			},
