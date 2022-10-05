@@ -173,6 +173,57 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/pl_create_gold_tbls')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "nb_create_gold_tbls",
+						"description": "Notebook creates gold tables and transforms data in the gold folder from to delta",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Create_gold_tbls",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "wocasparkpool",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": null,
+							"conf": {
+								"spark.dynamicAllocation.enabled": null,
+								"spark.dynamicAllocation.minExecutors": null,
+								"spark.dynamicAllocation.maxExecutors": null
+							},
+							"driverSize": null,
+							"numExecutors": null
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/Create_gold_tbls')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/pl_create_silver_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -2062,7 +2113,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "2588e733-692e-4cfe-b816-dab9693d5849"
+						"spark.autotune.trackingId": "a2abddbd-728e-49dc-87dd-ba1c962a7d58"
 					}
 				},
 				"metadata": {
@@ -2087,8 +2138,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 5
 				},
@@ -2108,7 +2158,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"#Set the folder paths so that it can be used later. \r\n",
 							"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'\r\n",
@@ -2116,7 +2165,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": 81
+						"execution_count": 99
 					},
 					{
 						"cell_type": "code",
@@ -2137,7 +2186,7 @@
 							"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 						],
 						"outputs": [],
-						"execution_count": 82
+						"execution_count": 100
 					},
 					{
 						"cell_type": "markdown",
@@ -2172,7 +2221,7 @@
 							"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 						],
 						"outputs": [],
-						"execution_count": 83
+						"execution_count": 101
 					},
 					{
 						"cell_type": "markdown",
@@ -2205,7 +2254,7 @@
 							"from pyspark.sql.functions import *"
 						],
 						"outputs": [],
-						"execution_count": 84
+						"execution_count": 102
 					},
 					{
 						"cell_type": "markdown",
@@ -2243,7 +2292,7 @@
 							"                        .dropna(how='any') # Drop null values"
 						],
 						"outputs": [],
-						"execution_count": 85
+						"execution_count": 103
 					},
 					{
 						"cell_type": "code",
@@ -2262,7 +2311,7 @@
 							"#idv_age_grp_cnt_df.show(5)"
 						],
 						"outputs": [],
-						"execution_count": 86
+						"execution_count": 104
 					},
 					{
 						"cell_type": "markdown",
@@ -2301,7 +2350,7 @@
 							"                        .limit(10)"
 						],
 						"outputs": [],
-						"execution_count": 87
+						"execution_count": 105
 					},
 					{
 						"cell_type": "markdown",
@@ -2340,7 +2389,7 @@
 							"                    .dropna(how='any')"
 						],
 						"outputs": [],
-						"execution_count": 88
+						"execution_count": 113
 					},
 					{
 						"cell_type": "markdown",
@@ -2437,7 +2486,7 @@
 							"#fam_prim_cont.show()"
 						],
 						"outputs": [],
-						"execution_count": 89
+						"execution_count": 107
 					},
 					{
 						"cell_type": "code",
@@ -2468,7 +2517,7 @@
 							"#idv_fam_rship_fam_df.show(10)"
 						],
 						"outputs": [],
-						"execution_count": 90
+						"execution_count": 108
 					},
 					{
 						"cell_type": "markdown",
@@ -2510,7 +2559,7 @@
 							"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 						],
 						"outputs": [],
-						"execution_count": 91
+						"execution_count": 109
 					},
 					{
 						"cell_type": "markdown",
@@ -2544,7 +2593,7 @@
 							"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_grp_count\")"
 						],
 						"outputs": [],
-						"execution_count": 92
+						"execution_count": 110
 					},
 					{
 						"cell_type": "code",
@@ -2564,7 +2613,7 @@
 							"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 						],
 						"outputs": [],
-						"execution_count": 93
+						"execution_count": 111
 					},
 					{
 						"cell_type": "code",
@@ -2584,7 +2633,7 @@
 							"idv_fam_rship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship\")"
 						],
 						"outputs": [],
-						"execution_count": 94
+						"execution_count": 114
 					},
 					{
 						"cell_type": "code",
@@ -2604,7 +2653,7 @@
 							"fam_prim_cont.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_prim_cont\")"
 						],
 						"outputs": [],
-						"execution_count": 95
+						"execution_count": 115
 					},
 					{
 						"cell_type": "code",
@@ -2624,7 +2673,7 @@
 							"idv_fam_rship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_fam\")"
 						],
 						"outputs": [],
-						"execution_count": 96
+						"execution_count": 116
 					},
 					{
 						"cell_type": "markdown",
@@ -2656,7 +2705,7 @@
 							"mssparkutils.session.stop()"
 						],
 						"outputs": [],
-						"execution_count": 97
+						"execution_count": 117
 					}
 				]
 			},
@@ -2683,7 +2732,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "a046da28-760a-4860-8e0d-d0dc44ea5602"
+						"spark.autotune.trackingId": "017c3d31-803a-4e38-a61d-cc9e2bf85863"
 					}
 				},
 				"metadata": {
@@ -2708,8 +2757,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -3228,52 +3276,6 @@
 			},
 			"dependsOn": [],
 			"location": "australiaeast"
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/pl_create_gold_tbls')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"activities": [
-					{
-						"name": "nb_create_gold_tbls",
-						"description": "Notebook creates gold tables and transforms data in the gold folder from to delta",
-						"type": "SynapseNotebook",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebook": {
-								"referenceName": "Create_gold_tbls",
-								"type": "NotebookReference"
-							},
-							"snapshot": true,
-							"sparkPool": {
-								"referenceName": "wocasparkpool",
-								"type": "BigDataPoolReference"
-							},
-							"executorSize": null,
-							"conf": {},
-							"driverSize": null
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/Create_gold_tbls')]",
-				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
-			]
 		}
 	]
 }
