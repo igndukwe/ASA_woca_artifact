@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "74a0cc96-d89f-44fd-8a54-3ee9d24cb3c3"
+				"spark.autotune.trackingId": "70b24081-7c5d-4062-b8b7-6dbf8862d97d"
 			}
 		},
 		"metadata": {
@@ -69,7 +69,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 3
+				"execution_count": 51
 			},
 			{
 				"cell_type": "code",
@@ -89,7 +89,7 @@
 					"# Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": null
+				"execution_count": 52
 			},
 			{
 				"cell_type": "markdown",
@@ -123,7 +123,7 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": null
+				"execution_count": 53
 			},
 			{
 				"cell_type": "markdown",
@@ -155,7 +155,7 @@
 					"# import\r\n",
 					"from pyspark.sql.functions import *"
 				],
-				"execution_count": null
+				"execution_count": 54
 			},
 			{
 				"cell_type": "markdown",
@@ -192,7 +192,7 @@
 					"                        .orderBy('counts') \\\r\n",
 					"                        .dropna(how='any') # Drop null values"
 				],
-				"execution_count": null
+				"execution_count": 55
 			},
 			{
 				"cell_type": "code",
@@ -210,7 +210,7 @@
 				"source": [
 					"#idv_age_grp_cnt_df.show(5)"
 				],
-				"execution_count": null
+				"execution_count": 56
 			},
 			{
 				"cell_type": "markdown",
@@ -248,7 +248,7 @@
 					"                        .dropna(how='any') \\\r\n",
 					"                        .limit(10)"
 				],
-				"execution_count": null
+				"execution_count": 57
 			},
 			{
 				"cell_type": "markdown",
@@ -286,7 +286,7 @@
 					"                    .orderBy(col('counts').desc()) \\\r\n",
 					"                    .dropna(how='any')"
 				],
-				"execution_count": null
+				"execution_count": 58
 			},
 			{
 				"cell_type": "markdown",
@@ -370,19 +370,31 @@
 					}
 				},
 				"source": [
-					"## How many top five FamilyMembership are in one primary contact? (distributions)\r\n",
-					"fam_prim_cont = family_df \\\r\n",
+					"fam_prim_cont_df = family_df \\\r\n",
 					"                .join(family_membership_df, family_df.family_id == family_membership_df.family, 'inner') \\\r\n",
-					"                .groupBy('primary_contact') \\\r\n",
+					"                .groupBy(family_df.primary_contact) \\\r\n",
 					"                .agg(count(lit(1)).alias('counts')) \\\r\n",
-					"                .select('counts')\\\r\n",
+					"                .select('counts') \\\r\n",
 					"                .distinct() \\\r\n",
 					"                .orderBy(col('counts').desc()) \\\r\n",
 					"                .dropna(how='any') \\\r\n",
 					"                .limit(5)\r\n",
-					"#fam_prim_cont.show()"
+					"#fam_prim_cont_df.show()"
 				],
-				"execution_count": null
+				"execution_count": 59
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## What is the top five distributions of individual family membership?"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -404,6 +416,8 @@
 					"idv_fam_rship_df = individual_df \\\r\n",
 					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)\r\n",
 					"\r\n",
+					"idv_fam_rship_df = idv_fam_rship_df.withColumnRenamed('primary_contact', 'primary_contact_2')\r\n",
+					"\r\n",
 					"# 2nd add the family table to the combination \r\n",
 					"idv_fam_rship_fam_df = idv_fam_rship_df \\\r\n",
 					"                    .join(family_df, idv_fam_rship_df.family == family_df.family_id) \\\r\n",
@@ -412,7 +426,7 @@
 					"#idv_fam_rship_fam_df.printSchema()\r\n",
 					"#idv_fam_rship_fam_df.show(10)"
 				],
-				"execution_count": null
+				"execution_count": 60
 			},
 			{
 				"cell_type": "markdown",
@@ -453,7 +467,7 @@
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
-				"execution_count": null
+				"execution_count": 61
 			},
 			{
 				"cell_type": "markdown",
@@ -486,7 +500,7 @@
 					"# Write data in delta fmt\r\n",
 					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_grp_count\")"
 				],
-				"execution_count": null
+				"execution_count": 62
 			},
 			{
 				"cell_type": "code",
@@ -505,7 +519,7 @@
 					"# Write data in delta fmt \r\n",
 					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 				],
-				"execution_count": null
+				"execution_count": 63
 			},
 			{
 				"cell_type": "code",
@@ -524,7 +538,7 @@
 					"# Write data in delta fmt  \r\n",
 					"idv_fam_rship_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_cnt_df\")"
 				],
-				"execution_count": null
+				"execution_count": 64
 			},
 			{
 				"cell_type": "code",
@@ -541,9 +555,9 @@
 				},
 				"source": [
 					"# Write data in delta fmt  \r\n",
-					"fam_prim_cont.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_prim_cont\")"
+					"fam_prim_cont_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_prim_cont\")"
 				],
-				"execution_count": null
+				"execution_count": 65
 			},
 			{
 				"cell_type": "code",
@@ -562,7 +576,7 @@
 					"# Write data in delta fmt  \r\n",
 					"idv_fam_rship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_fam\")"
 				],
-				"execution_count": null
+				"execution_count": 66
 			},
 			{
 				"cell_type": "markdown",
@@ -593,7 +607,7 @@
 				"source": [
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": null
+				"execution_count": 67
 			}
 		]
 	}

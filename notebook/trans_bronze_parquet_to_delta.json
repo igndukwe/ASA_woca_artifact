@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "e22234fc-89c9-4dc9-980d-a3d20ca408c8"
+				"spark.autotune.trackingId": "9db44dd9-e7f4-4aa1-9048-1960418f6a8c"
 			}
 		},
 		"metadata": {
@@ -42,7 +42,8 @@
 				"sparkVersion": "3.2",
 				"nodeCount": 10,
 				"cores": 4,
-				"memory": 28
+				"memory": 28,
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 1
 		},
@@ -74,7 +75,10 @@
 					}
 				},
 				"source": [
+					"#import\r\n",
 					"from delta.tables import *\r\n",
+					"\r\n",
+					"# traverse all the folders in the bronze path\r\n",
 					"for folder in mssparkutils.fs.ls('abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'):\r\n",
 					"    deltaTable_individual = DeltaTable.convertToDelta(spark, f\"parquet.`{folder.path}`\")\r\n",
 					"\r\n",
