@@ -1228,37 +1228,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Trigger 1')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pl_load_data_4m_db_2_dl_v2",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Minute",
-						"interval": 15,
-						"startTime": "2022-09-26T05:14:00",
-						"endTime": "2022-09-27T07:14:00",
-						"timeZone": "New Zealand Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -2113,7 +2082,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "79c8e7d9-8c1d-4004-b554-183b47abc306"
+						"spark.autotune.trackingId": "84761240-1180-4ebb-ad6c-4fa5df8deebe"
 					}
 				},
 				"metadata": {
@@ -2167,7 +2136,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": 2
+						"execution_count": 3
 					},
 					{
 						"cell_type": "code",
@@ -2734,7 +2703,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "1d79400c-9bb5-4a0c-a575-780e070ae29c"
+						"spark.autotune.trackingId": "3292a33d-e985-4ce8-821b-51e1e6aadd6e"
 					}
 				},
 				"metadata": {
@@ -3280,47 +3249,6 @@
 			},
 			"dependsOn": [],
 			"location": "australiaeast"
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/Trigger 2')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pl_overall_execution",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Week",
-						"interval": 1,
-						"startTime": "2022-10-05T10:00:00",
-						"timeZone": "New Zealand Standard Time",
-						"schedule": {
-							"minutes": [
-								0
-							],
-							"hours": [
-								10
-							],
-							"weekDays": [
-								"Thursday"
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/pl_overall_execution')]"
-			]
 		}
 	]
 }
