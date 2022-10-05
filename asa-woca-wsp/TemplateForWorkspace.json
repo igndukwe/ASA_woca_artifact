@@ -2002,7 +2002,7 @@
 					"name": "4_gold/explore"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on individual, family and family membership\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n\n--2a. total number of records after the join operation \nSELECT \n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n-- 3a. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n-- 3b. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n\n--3c how many distinct counts of individuals/family assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n--4a. How many individuals are related to each family?\n--*****Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n----- individuals\nSELECT\n    f.city,\n    i.individual_id,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n\n----\nSELECT\n    f.city,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n",
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. perform join on individual, family and family membership\nSELECT \n    i.*, fm.*, f.*\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n\n--2a. total number of records after the join operation \nSELECT \n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family);\n\n\n-- 3a. count how many individuals/family were assigned a primart contact\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n-- 3b. remove the null values\nSELECT\n    f.primary_contact,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY totals DESC;\n\n\n\n--3c how many distinct counts of individuals/family assignets to primart contacts\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n\n--4a. How many individuals are related to each family?\n--*****Qn: where is the dict for (family_relationship)\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n----- individuals\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n----- families---\nSELECT\n    fm.family_relationship,\n    COUNT(1) AS totals\nFROM silver.Family f\nLEFT JOIN silver.FamilyMembership fm ON (f.family_id = fm.family)\nWHERE fm.family_relationship IS NOT NULL\nGROUP BY fm.family_relationship\nORDER BY totals DESC;\n\n----\nSELECT\n    f.city,\n    COUNT(f.city) AS totals\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nLEFT JOIN silver.Family f ON (f.family_id = fm.family)\nWHERE f.city IS NOT NULL\nGROUP BY i.individual_id, f.city\nORDER BY totals DESC;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -2060,7 +2060,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "9a333fe1-6a7a-466f-b94a-ec5183b70d18"
+						"spark.autotune.trackingId": "97b9da98-09c6-4a92-a5cc-5702068f7ce7"
 					}
 				},
 				"metadata": {
@@ -2114,7 +2114,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": 134
+						"execution_count": 1
 					},
 					{
 						"cell_type": "code",
@@ -2135,7 +2135,7 @@
 							"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 						],
 						"outputs": [],
-						"execution_count": 135
+						"execution_count": 2
 					},
 					{
 						"cell_type": "markdown",
@@ -2170,7 +2170,7 @@
 							"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 						],
 						"outputs": [],
-						"execution_count": 136
+						"execution_count": 3
 					},
 					{
 						"cell_type": "markdown",
@@ -2182,7 +2182,7 @@
 							}
 						},
 						"source": [
-							"# What are the individual age groups?"
+							"# Perform Aggregations"
 						]
 					},
 					{
@@ -2203,7 +2203,7 @@
 							"from pyspark.sql.functions import *"
 						],
 						"outputs": [],
-						"execution_count": 137
+						"execution_count": 4
 					},
 					{
 						"cell_type": "markdown",
@@ -2215,7 +2215,7 @@
 							}
 						},
 						"source": [
-							"### Aggregate the total age_group counts"
+							"### What are the individual age groups"
 						]
 					},
 					{
@@ -2241,7 +2241,7 @@
 							"                        .dropna(how='any') # Drop null values"
 						],
 						"outputs": [],
-						"execution_count": 138
+						"execution_count": 5
 					},
 					{
 						"cell_type": "code",
@@ -2260,7 +2260,7 @@
 							"#idv_age_grp_cnt_df.show(5)"
 						],
 						"outputs": [],
-						"execution_count": 139
+						"execution_count": 6
 					},
 					{
 						"cell_type": "markdown",
@@ -2272,7 +2272,7 @@
 							}
 						},
 						"source": [
-							"# What are the top ten cities where families hail?"
+							"## What are the top ten cities where families hail?"
 						]
 					},
 					{
@@ -2299,7 +2299,7 @@
 							"                        .limit(10)"
 						],
 						"outputs": [],
-						"execution_count": 140
+						"execution_count": 7
 					},
 					{
 						"cell_type": "markdown",
@@ -2328,54 +2328,9 @@
 							}
 						},
 						"source": [
-							"fam_relnship_df = individual_df \\\r\n",
-							"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
-							"                    .join(family_df, family_df.family_id == 'family') \\\r\n",
-							"                    .select(col('family_relationship')) \\\r\n",
-							"                    .groupBy('family_relationship') \\\r\n",
-							"                    .agg(count(lit(1)).alias('counts')) \\\r\n",
-							"                    .orderBy(col('counts').desc()) \\\r\n",
-							"                    .dropna(how='any')"
-						],
-						"outputs": [],
-						"execution_count": 141
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							}
-						},
-						"source": [
+							"## joining two tables (Individual and Family Membership)\r\n",
 							"idv_fam_relnship_df = individual_df \\\r\n",
-							"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)"
-						],
-						"outputs": [],
-						"execution_count": 142
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							}
-						},
-						"source": [
-							"idv_fam_relnship_fam_df = idv_fam_relnship_df \\\r\n",
-							"                    .join(family_df, idv_fam_relnship_df.family == family_df.family_id) \\\r\n",
+							"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
 							"                    .select(col('family_relationship')) \\\r\n",
 							"                    .groupBy('family_relationship') \\\r\n",
 							"                    .agg(count(lit(1)).alias('counts')) \\\r\n",
@@ -2383,7 +2338,7 @@
 							"                    .dropna(how='any')"
 						],
 						"outputs": [],
-						"execution_count": 143
+						"execution_count": 8
 					},
 					{
 						"cell_type": "code",
@@ -2399,29 +2354,84 @@
 							}
 						},
 						"source": [
-							"#idv_fam_relnship_fam_df.printSchema()"
-						],
-						"outputs": [],
-						"execution_count": 144
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							}
-						},
-						"source": [
+							"# Joining 3 tables (Individual, Family and Family Membershiop)\r\n",
+							"# 1st join the Individual table with the Family table\r\n",
+							"## idv_fam_relnship_df = individual_df \\\r\n",
+							"##                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)\r\n",
+							"\r\n",
+							"# 2nd add the family table to the combination \r\n",
+							"## idv_fam_relnship_fam_df = idv_fam_relnship_df \\\r\n",
+							"##                    .join(family_df, idv_fam_relnship_df.family == family_df.family_id) \\\r\n",
+							"##                    .select(col('family_relationship')) \\\r\n",
+							"##                    .groupBy('family_relationship') \\\r\n",
+							"##                    .agg(count(lit(1)).alias('counts')) \\\r\n",
+							"##                    .orderBy(col('counts').desc()) \\\r\n",
+							"##                    .dropna(how='any')\r\n",
+							"\r\n",
+							"#idv_fam_relnship_fam_df.printSchema()\r\n",
 							"#idv_fam_relnship_fam_df.show(10)"
 						],
 						"outputs": [],
-						"execution_count": 145
+						"execution_count": 9
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## What is the distribution of individual family membership?"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"fam_mem_dist = individual_df \\\r\n",
+							"                .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
+							"                .groupBy('individual') \\\r\n",
+							"                .agg(count(lit(1)).alias('counts')) \\\r\n",
+							"                .select('counts')\\\r\n",
+							"                .distinct() \\\r\n",
+							"                .orderBy(col('counts').desc()) \\\r\n",
+							"                .dropna(how='any')\r\n",
+							"# fam_mem_dist.show()"
+						],
+						"outputs": [],
+						"execution_count": 10
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						],
+						"outputs": [],
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2463,7 +2473,7 @@
 							"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 						],
 						"outputs": [],
-						"execution_count": 146
+						"execution_count": 11
 					},
 					{
 						"cell_type": "markdown",
@@ -2497,7 +2507,7 @@
 							"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.individual_age_group_count\")"
 						],
 						"outputs": [],
-						"execution_count": 147
+						"execution_count": 12
 					},
 					{
 						"cell_type": "code",
@@ -2518,7 +2528,7 @@
 							"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_top_ten_cities\")"
 						],
 						"outputs": [],
-						"execution_count": 148
+						"execution_count": 13
 					},
 					{
 						"cell_type": "code",
@@ -2535,12 +2545,53 @@
 						},
 						"source": [
 							"#family_relationship\r\n",
-							"# Write the top ten cities data where families hail in delta fmt \r\n",
+							"# Write the individual family relationships in delta fmt \r\n",
 							"# note that the databasr woca_ldw_spark has got a default location of \r\n",
-							"idv_fam_relnship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.family_relationship\")"
+							"idv_fam_relnship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_ship\")"
 						],
 						"outputs": [],
-						"execution_count": 149
+						"execution_count": 14
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"#family_relationship\r\n",
+							"# Write the family membership distribution in delta fmt \r\n",
+							"# note that the databasr woca_ldw_spark has got a default location of \r\n",
+							"fam_mem_dist.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_mem_dist\")"
+						],
+						"outputs": [],
+						"execution_count": 15
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"mssparkutils.session.stop()"
+						],
+						"outputs": [],
+						"execution_count": 16
 					}
 				]
 			},
@@ -2567,7 +2618,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "9979ab07-05da-4ab2-a65d-044ea107f50e"
+						"spark.autotune.trackingId": "49dd5b3e-3940-45a6-862b-930f4a84b36d"
 					}
 				},
 				"metadata": {
@@ -2610,7 +2661,7 @@
 							"spark.sql(\"DROP DATABASE IF EXISTS woca_ldw_spark CASCADE\")"
 						],
 						"outputs": [],
-						"execution_count": 2
+						"execution_count": 1
 					}
 				]
 			},
@@ -3055,6 +3106,26 @@
 			"properties": {
 				"content": {
 					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[family_top_ten_cities]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw_spark",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 7')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[family_relationship]",
 					"metadata": {
 						"language": "sql"
 					},
