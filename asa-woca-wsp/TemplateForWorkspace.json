@@ -1996,7 +1996,7 @@
 					"name": "4_gold/explore"
 				},
 				"content": {
-					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(fm.individual)) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nORDER BY indiv_per_fam_count DESC;\n\n--2b. who are thoes individuals that do not have family members\nSELECT\n   fm.individual,\n   COUNT(fm.individual) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nHAVING COUNT(fm.individual) < 1\n",
+					"query": "-- 1. switch to use woca_ldw\nUSE woca_ldw\nGO \n\n--1a. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(fm.individual)) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nORDER BY indiv_per_fam_count DESC;\n\n--1b. how many familyMembership does an individual have\nSELECT\n    DISTINCT(COUNT(1)) AS primary_contact_assi\nFROM silver.Family f\nLEFT JOIN silver.FamilyMembership fm ON (f.family_id = fm.family)\nWHERE f.primary_contact IS NOT NULL\nGROUP BY f.primary_contact\nORDER BY primary_contact_assi DESC;\n\n--2b. who are thoes individuals that do not have family members\nSELECT\n   fm.individual,\n   COUNT(fm.individual) AS indiv_per_fam_count\nFROM silver.Individual i\nLEFT JOIN silver.FamilyMembership fm ON (i.individual_id = fm.individual)\nWHERE fm.individual IS NOT NULL\nGROUP BY  fm.individual\nHAVING COUNT(fm.individual) < 1\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -2100,7 +2100,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "27458fc4-accf-4f35-9ab7-86b842036224"
+						"spark.autotune.trackingId": "268f0cdf-82ff-4f20-b44f-bd0c4858b56b"
 					}
 				},
 				"metadata": {
@@ -2154,7 +2154,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": 17
+						"execution_count": 18
 					},
 					{
 						"cell_type": "code",
@@ -2175,7 +2175,7 @@
 							"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 19
 					},
 					{
 						"cell_type": "markdown",
@@ -2210,7 +2210,7 @@
 							"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 20
 					},
 					{
 						"cell_type": "markdown",
@@ -2243,7 +2243,7 @@
 							"from pyspark.sql.functions import *"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 21
 					},
 					{
 						"cell_type": "markdown",
@@ -2281,7 +2281,7 @@
 							"                        .dropna(how='any') # Drop null values"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 22
 					},
 					{
 						"cell_type": "code",
@@ -2300,7 +2300,7 @@
 							"#idv_age_grp_cnt_df.show(5)"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 23
 					},
 					{
 						"cell_type": "markdown",
@@ -2339,7 +2339,7 @@
 							"                        .limit(10)"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 24
 					},
 					{
 						"cell_type": "markdown",
@@ -2378,7 +2378,7 @@
 							"                    .dropna(how='any')"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 25
 					},
 					{
 						"cell_type": "code",
@@ -2412,7 +2412,20 @@
 							"#idv_fam_relnship_fam_df.show(10)"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 26
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						]
 					},
 					{
 						"cell_type": "markdown",
@@ -2452,26 +2465,7 @@
 							"# fam_mem_dist.show()"
 						],
 						"outputs": [],
-						"execution_count": null
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							}
-						},
-						"source": [
-							""
-						],
-						"outputs": [],
-						"execution_count": null
+						"execution_count": 27
 					},
 					{
 						"cell_type": "markdown",
@@ -2513,7 +2507,7 @@
 							"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 28
 					},
 					{
 						"cell_type": "markdown",
@@ -2547,7 +2541,7 @@
 							"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_group_count\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 29
 					},
 					{
 						"cell_type": "code",
@@ -2568,7 +2562,7 @@
 							"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 30
 					},
 					{
 						"cell_type": "code",
@@ -2590,7 +2584,7 @@
 							"idv_fam_relnship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_ship\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 31
 					},
 					{
 						"cell_type": "code",
@@ -2612,7 +2606,7 @@
 							"fam_mem_dist.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_mem_dist\")"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 32
 					},
 					{
 						"cell_type": "markdown",
@@ -2644,7 +2638,7 @@
 							"mssparkutils.session.stop()"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 33
 					}
 				]
 			},
@@ -2671,7 +2665,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "14012d49-52a0-4616-a3eb-45a0cf23ed2b"
+						"spark.autotune.trackingId": "7ee4bfe2-9229-4d91-94e9-00cdfab871b5"
 					}
 				},
 				"metadata": {
@@ -2696,8 +2690,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
