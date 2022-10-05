@@ -3307,7 +3307,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "61ef5b67-23a8-416e-a405-eaa0f8aad0ff"
+						"spark.autotune.trackingId": "da71825c-8cb3-49d0-9a91-7fc82af2f7a3"
 					}
 				},
 				"metadata": {
@@ -3956,11 +3956,11 @@
 					"recurrence": {
 						"frequency": "Week",
 						"interval": 1,
-						"startTime": "2022-10-06T00:27:00",
+						"startTime": "2022-10-06T12:40:00",
 						"timeZone": "New Zealand Standard Time",
 						"schedule": {
 							"weekDays": [
-								"Friday"
+								"Thursday"
 							]
 						}
 					}
