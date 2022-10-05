@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "02177068-5b8a-443f-ba91-0dc09f7ec8cc"
+				"spark.autotune.trackingId": "7ee4bfe2-9229-4d91-94e9-00cdfab871b5"
 			}
 		},
 		"metadata": {
@@ -49,6 +49,19 @@
 		},
 		"cells": [
 			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Delete the database"
+				]
+			},
+			{
 				"cell_type": "code",
 				"metadata": {
 					"microsoft": {
@@ -59,7 +72,20 @@
 					"%%pyspark\n",
 					"spark.sql(\"DROP DATABASE IF EXISTS woca_ldw_spark CASCADE\")"
 				],
-				"execution_count": 2
+				"execution_count": 3
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Stop the spark pool once done"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -78,7 +104,7 @@
 					"# Auto stop the spark pool\r\n",
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": null
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
