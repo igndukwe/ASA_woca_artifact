@@ -1,0 +1,22 @@
+{
+	"name": "woca_weekly_trigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2022-10-06T00:27:00",
+				"timeZone": "New Zealand Standard Time",
+				"schedule": {
+					"weekDays": [
+						"Friday"
+					]
+				}
+			}
+		}
+	}
+}
