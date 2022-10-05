@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "e40c269a-8e89-45f8-8cb0-f6de1c328d12"
+				"spark.autotune.trackingId": "e5d787c4-a948-4ade-91be-459dc0b2f7ba"
 			}
 		},
 		"metadata": {
@@ -69,7 +69,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 17
+				"execution_count": 18
 			},
 			{
 				"cell_type": "code",
@@ -89,7 +89,7 @@
 					"# Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": null
+				"execution_count": 19
 			},
 			{
 				"cell_type": "markdown",
@@ -123,7 +123,7 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": null
+				"execution_count": 20
 			},
 			{
 				"cell_type": "markdown",
@@ -155,7 +155,7 @@
 					"# import\r\n",
 					"from pyspark.sql.functions import *"
 				],
-				"execution_count": null
+				"execution_count": 21
 			},
 			{
 				"cell_type": "markdown",
@@ -192,7 +192,7 @@
 					"                        .orderBy('counts') \\\r\n",
 					"                        .dropna(how='any') # Drop null values"
 				],
-				"execution_count": null
+				"execution_count": 22
 			},
 			{
 				"cell_type": "code",
@@ -210,7 +210,7 @@
 				"source": [
 					"#idv_age_grp_cnt_df.show(5)"
 				],
-				"execution_count": null
+				"execution_count": 23
 			},
 			{
 				"cell_type": "markdown",
@@ -248,7 +248,7 @@
 					"                        .dropna(how='any') \\\r\n",
 					"                        .limit(10)"
 				],
-				"execution_count": null
+				"execution_count": 24
 			},
 			{
 				"cell_type": "markdown",
@@ -286,7 +286,7 @@
 					"                    .orderBy(col('counts').desc()) \\\r\n",
 					"                    .dropna(how='any')"
 				],
-				"execution_count": null
+				"execution_count": 25
 			},
 			{
 				"cell_type": "code",
@@ -319,7 +319,20 @@
 					"#idv_fam_relnship_fam_df.printSchema()\r\n",
 					"#idv_fam_relnship_fam_df.show(10)"
 				],
-				"execution_count": null
+				"execution_count": 26
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
 			},
 			{
 				"cell_type": "markdown",
@@ -358,25 +371,7 @@
 					"                .dropna(how='any')\r\n",
 					"# fam_mem_dist.show()"
 				],
-				"execution_count": null
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					""
-				],
-				"execution_count": null
+				"execution_count": 27
 			},
 			{
 				"cell_type": "markdown",
@@ -417,7 +412,7 @@
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
-				"execution_count": null
+				"execution_count": 28
 			},
 			{
 				"cell_type": "markdown",
@@ -450,7 +445,7 @@
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_group_count\")"
 				],
-				"execution_count": null
+				"execution_count": 29
 			},
 			{
 				"cell_type": "code",
@@ -470,7 +465,7 @@
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 				],
-				"execution_count": null
+				"execution_count": 30
 			},
 			{
 				"cell_type": "code",
@@ -491,7 +486,7 @@
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"idv_fam_relnship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_ship\")"
 				],
-				"execution_count": null
+				"execution_count": 31
 			},
 			{
 				"cell_type": "code",
@@ -512,7 +507,7 @@
 					"# note that the databasr woca_ldw_spark has got a default location of \r\n",
 					"fam_mem_dist.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_mem_dist\")"
 				],
-				"execution_count": null
+				"execution_count": 32
 			},
 			{
 				"cell_type": "markdown",
@@ -543,7 +538,7 @@
 				"source": [
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": null
+				"execution_count": 33
 			}
 		]
 	}
