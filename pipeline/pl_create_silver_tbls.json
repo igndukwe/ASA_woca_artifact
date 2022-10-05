@@ -1,5 +1,5 @@
 {
-	"name": "pl_create_silver_tbl",
+	"name": "pl_create_silver_tbls",
 	"properties": {
 		"description": "This pipeline first deletes all the listed file paths in the data lake silver path if they exist then it recreates the listed external tables which in turn recreates listed files in their subfolders within the silver path  ",
 		"activities": [

@@ -1,0 +1,35 @@
+{
+	"name": "pl_create_gold_tbls",
+	"properties": {
+		"activities": [
+			{
+				"name": "nb_create_gold_tbls",
+				"description": "Notebook creates gold tables and transforms data in the gold folder from to delta",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "Create_gold_tbls",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "wocasparkpool",
+						"type": "BigDataPoolReference"
+					},
+					"executorSize": null,
+					"driverSize": null
+				}
+			}
+		],
+		"annotations": []
+	}
+}
