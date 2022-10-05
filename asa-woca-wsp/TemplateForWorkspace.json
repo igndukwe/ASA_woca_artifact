@@ -3278,15 +3278,17 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "SELECT TOP (100) [col]\n FROM [woca_ldw_spark].[dbo].[fam_prim_cont]",
+					"query": "SELECT *\n FROM [woca_ldw_spark].[dbo].[fam_prim_cont]",
 					"metadata": {
 						"language": "sql"
 					},
 					"currentConnection": {
 						"databaseName": "woca_ldw_spark",
 						"poolName": "Built-in"
-					}
-				}
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
 			},
 			"dependsOn": []
 		}
