@@ -2113,7 +2113,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "a2abddbd-728e-49dc-87dd-ba1c962a7d58"
+						"spark.autotune.trackingId": "cf6ee716-8069-4033-8402-119a0c14072c"
 					}
 				},
 				"metadata": {
@@ -2138,7 +2138,8 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 5
 				},
@@ -2158,6 +2159,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"#Set the folder paths so that it can be used later. \r\n",
 							"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'\r\n",
@@ -2380,7 +2382,7 @@
 						},
 						"source": [
 							"## joining two tables (Individual and Family Membership)\r\n",
-							"idv_fam_rship_df = individual_df \\\r\n",
+							"idv_fam_rship_cnt_df = individual_df \\\r\n",
 							"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
 							"                    .select(col('family_relationship')) \\\r\n",
 							"                    .groupBy('family_relationship') \\\r\n",
@@ -2630,7 +2632,7 @@
 						},
 						"source": [
 							"# Write data in delta fmt  \r\n",
-							"idv_fam_rship_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship\")"
+							"idv_fam_rship_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_cnt_df\")"
 						],
 						"outputs": [],
 						"execution_count": 114
@@ -2712,7 +2714,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Notebook 2')]",
+			"name": "[concat(parameters('workspaceName'), '/delete_gold_resources')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -2732,7 +2734,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "017c3d31-803a-4e38-a61d-cc9e2bf85863"
+						"spark.autotune.trackingId": "d89b346f-7088-44cf-821b-6f1991c70989"
 					}
 				},
 				"metadata": {
@@ -2757,7 +2759,8 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -2787,7 +2790,7 @@
 							"spark.sql(\"DROP DATABASE IF EXISTS woca_ldw_spark CASCADE\")"
 						],
 						"outputs": [],
-						"execution_count": 5
+						"execution_count": 7
 					},
 					{
 						"cell_type": "markdown",
@@ -2820,7 +2823,7 @@
 							"mssparkutils.session.stop()"
 						],
 						"outputs": [],
-						"execution_count": 6
+						"execution_count": 8
 					},
 					{
 						"cell_type": "code",
