@@ -2113,7 +2113,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "28b59110-5288-4eab-b1fc-fecd35033511"
+						"spark.autotune.trackingId": "79c8e7d9-8c1d-4004-b554-183b47abc306"
 					}
 				},
 				"metadata": {
@@ -2167,7 +2167,7 @@
 							"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 						],
 						"outputs": [],
-						"execution_count": 99
+						"execution_count": 2
 					},
 					{
 						"cell_type": "code",
@@ -2188,7 +2188,7 @@
 							"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 						],
 						"outputs": [],
-						"execution_count": 100
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2223,7 +2223,7 @@
 							"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 						],
 						"outputs": [],
-						"execution_count": 101
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2256,7 +2256,7 @@
 							"from pyspark.sql.functions import *"
 						],
 						"outputs": [],
-						"execution_count": 102
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2294,7 +2294,7 @@
 							"                        .dropna(how='any') # Drop null values"
 						],
 						"outputs": [],
-						"execution_count": 103
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2313,7 +2313,7 @@
 							"#idv_age_grp_cnt_df.show(5)"
 						],
 						"outputs": [],
-						"execution_count": 104
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2352,7 +2352,7 @@
 							"                        .limit(10)"
 						],
 						"outputs": [],
-						"execution_count": 105
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2391,7 +2391,7 @@
 							"                    .dropna(how='any')"
 						],
 						"outputs": [],
-						"execution_count": 113
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2488,7 +2488,7 @@
 							"#fam_prim_cont.show()"
 						],
 						"outputs": [],
-						"execution_count": 107
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2519,7 +2519,7 @@
 							"#idv_fam_rship_fam_df.show(10)"
 						],
 						"outputs": [],
-						"execution_count": 108
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2561,7 +2561,7 @@
 							"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 						],
 						"outputs": [],
-						"execution_count": 109
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2595,7 +2595,7 @@
 							"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_grp_count\")"
 						],
 						"outputs": [],
-						"execution_count": 110
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2615,7 +2615,7 @@
 							"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 						],
 						"outputs": [],
-						"execution_count": 111
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2635,7 +2635,7 @@
 							"idv_fam_rship_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_cnt_df\")"
 						],
 						"outputs": [],
-						"execution_count": 114
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2655,7 +2655,7 @@
 							"fam_prim_cont.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_prim_cont\")"
 						],
 						"outputs": [],
-						"execution_count": 115
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
@@ -2675,7 +2675,7 @@
 							"idv_fam_rship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_fam\")"
 						],
 						"outputs": [],
-						"execution_count": 116
+						"execution_count": null
 					},
 					{
 						"cell_type": "markdown",
@@ -2707,7 +2707,7 @@
 							"mssparkutils.session.stop()"
 						],
 						"outputs": [],
-						"execution_count": 117
+						"execution_count": null
 					}
 				]
 			},
@@ -2734,7 +2734,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "2ce830ec-cd10-426d-b58e-e9a2d5ef8a0c"
+						"spark.autotune.trackingId": "1d79400c-9bb5-4a0c-a575-780e070ae29c"
 					}
 				},
 				"metadata": {
