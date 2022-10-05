@@ -2734,7 +2734,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "8f74c065-455d-4e4e-8b4c-eafb67cbdb69"
+						"spark.autotune.trackingId": "2ce830ec-cd10-426d-b58e-e9a2d5ef8a0c"
 					}
 				},
 				"metadata": {
@@ -2823,7 +2823,7 @@
 							"mssparkutils.session.stop()"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 2
 					},
 					{
 						"cell_type": "code",
@@ -3280,6 +3280,47 @@
 			},
 			"dependsOn": [],
 			"location": "australiaeast"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Trigger 2')]",
+			"type": "Microsoft.Synapse/workspaces/triggers",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_overall_execution",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-10-05T10:00:00",
+						"timeZone": "New Zealand Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								10
+							],
+							"weekDays": [
+								"Thursday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/pipelines/pl_overall_execution')]"
+			]
 		}
 	]
 }
