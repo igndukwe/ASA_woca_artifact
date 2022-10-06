@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "70b24081-7c5d-4062-b8b7-6dbf8862d97d"
+				"spark.autotune.trackingId": "ba9b42b7-04b2-4004-99b8-2a3d1b61afb3"
 			}
 		},
 		"metadata": {
@@ -302,61 +302,6 @@
 				]
 			},
 			{
-				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					"```\r\n",
-					"## What is the distribution of individual family membership?\r\n",
-					"# Joining 3 tables (Individual, Family and Family Membershiop)\r\n",
-					"# 1st join the Individual table with the Family table\r\n",
-					"idv_fam_rship_df = individual_df \\\r\n",
-					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)\r\n",
-					"\r\n",
-					"# 2nd add the family table to the combination \r\n",
-					"idv_fam_rship_fam_df = idv_fam_rship_df \\\r\n",
-					"                    .join(family_df, idv_fam_rship_df.family == family_df.family_id) \\\r\n",
-					"                    .select(col('family_relationship')) \\\r\n",
-					"                    .groupBy('family_relationship') \\\r\n",
-					"                    .agg(count(lit(1)).alias('counts')) \\\r\n",
-					"                    .orderBy(col('counts').desc()) \\\r\n",
-					"                    .dropna(how='any')\r\n",
-					"\r\n",
-					"idv_fam_rship_fam_df.printSchema()\r\n",
-					"idv_fam_rship_fam_df.show(10)\r\n",
-					"```"
-				]
-			},
-			{
-				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					"```\r\n",
-					"## What is the distribution of individual family membership?\r\n",
-					"fam_mem_dist = individual_df \\\r\n",
-					"                .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
-					"                .groupBy('individual') \\\r\n",
-					"                .agg(count(lit(1)).alias('counts')) \\\r\n",
-					"                .select('counts')\\\r\n",
-					"                .distinct() \\\r\n",
-					"                .orderBy(col('counts').desc()) \\\r\n",
-					"                .dropna(how='any')\r\n",
-					"# fam_mem_dist.show()\r\n",
-					"```"
-				]
-			},
-			{
 				"cell_type": "code",
 				"metadata": {
 					"jupyter": {
@@ -370,16 +315,18 @@
 					}
 				},
 				"source": [
+					"from pyspark.sql import Window\r\n",
 					"fam_prim_cont_df = family_df \\\r\n",
 					"                .join(family_membership_df, family_df.family_id == family_membership_df.family, 'inner') \\\r\n",
 					"                .groupBy(family_df.primary_contact) \\\r\n",
 					"                .agg(count(lit(1)).alias('counts')) \\\r\n",
 					"                .select('counts') \\\r\n",
-					"                .distinct() \\\r\n",
-					"                .orderBy(col('counts').desc()) \\\r\n",
+					"                .distinct()\\\r\n",
+					"                .withColumn('ids', row_number().over(Window.orderBy(col('counts').desc())))\\\r\n",
 					"                .dropna(how='any') \\\r\n",
 					"                .limit(5)\r\n",
-					"#fam_prim_cont_df.show()"
+					"\r\n",
+					"fam_prim_cont_df = fam_prim_cont_df.select('ids', 'counts')"
 				],
 				"execution_count": 59
 			},
@@ -414,17 +361,14 @@
 					"# Joining 3 tables (Individual, Family and Family Membershiop)\r\n",
 					"# 1st join the Individual table with the Family table\r\n",
 					"idv_fam_rship_df = individual_df \\\r\n",
-					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual)\r\n",
-					"\r\n",
-					"idv_fam_rship_df = idv_fam_rship_df.withColumnRenamed('primary_contact', 'primary_contact_2')\r\n",
+					"                    .join(family_membership_df, individual_df.individual_id == family_membership_df.individual) \\\r\n",
+					"                    .withColumnRenamed('primary_contact', 'primary_contact_2')\r\n",
 					"\r\n",
 					"# 2nd add the family table to the combination \r\n",
 					"idv_fam_rship_fam_df = idv_fam_rship_df \\\r\n",
 					"                    .join(family_df, idv_fam_rship_df.family == family_df.family_id) \\\r\n",
 					"                    .dropna(how='any')\r\n",
-					"\r\n",
-					"#idv_fam_rship_fam_df.printSchema()\r\n",
-					"#idv_fam_rship_fam_df.show(10)"
+					""
 				],
 				"execution_count": 60
 			},

@@ -1,6 +1,9 @@
 {
 	"name": "test_gold_tbls",
 	"properties": {
+		"folder": {
+			"name": "explore"
+		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
@@ -17,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "f59b1905-57d2-4028-b3a8-df1b29efc934"
+				"spark.autotune.trackingId": "e384e05f-560c-4393-86b2-eb60b6851e39"
 			}
 		},
 		"metadata": {
@@ -69,7 +72,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 74
+				"execution_count": 84
 			},
 			{
 				"cell_type": "code",
@@ -89,7 +92,7 @@
 					"# Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": 75
+				"execution_count": 85
 			},
 			{
 				"cell_type": "markdown",
@@ -123,7 +126,7 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": 76
+				"execution_count": 86
 			},
 			{
 				"cell_type": "markdown",
@@ -155,7 +158,7 @@
 					"# import\r\n",
 					"from pyspark.sql.functions import *"
 				],
-				"execution_count": 77
+				"execution_count": 87
 			},
 			{
 				"cell_type": "markdown",
@@ -193,7 +196,7 @@
 					"                        .dropna(how='any') # Drop null values\r\n",
 					"idv_age_grp_cnt_df.show()"
 				],
-				"execution_count": 78
+				"execution_count": 88
 			},
 			{
 				"cell_type": "markdown",
@@ -232,7 +235,7 @@
 					"                        .limit(10)\r\n",
 					"fam_top_ten_cty_df.show()"
 				],
-				"execution_count": 79
+				"execution_count": 89
 			},
 			{
 				"cell_type": "markdown",
@@ -271,7 +274,7 @@
 					"                    .dropna(how='any')\r\n",
 					"idv_fam_rship_cnt_df.show()"
 				],
-				"execution_count": 80
+				"execution_count": 90
 			},
 			{
 				"cell_type": "markdown",
@@ -370,7 +373,7 @@
 					"#fam_prim_cont_df = fam_prim_cont_df.withColumn('ids', row_number().over(Window.orderBy(col('counts').desc())))\r\n",
 					"fam_prim_cont_df.show()"
 				],
-				"execution_count": 81
+				"execution_count": 91
 			},
 			{
 				"cell_type": "markdown",
@@ -440,7 +443,7 @@
 					"#idv_fam_rship_fam_df.printSchema()\r\n",
 					"idv_fam_rship_fam_df.show(3)"
 				],
-				"execution_count": 82
+				"execution_count": 92
 			},
 			{
 				"cell_type": "markdown",
@@ -471,7 +474,7 @@
 				"source": [
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": 83
+				"execution_count": 93
 			}
 		]
 	}
