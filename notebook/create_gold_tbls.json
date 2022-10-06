@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "ba9b42b7-04b2-4004-99b8-2a3d1b61afb3"
+				"spark.autotune.trackingId": "cc22fd4c-e6ba-47eb-a7ed-4cc50e5a9c1a"
 			}
 		},
 		"metadata": {
@@ -69,7 +69,7 @@
 					"silver_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/silver/'\r\n",
 					"gold_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/'"
 				],
-				"execution_count": 51
+				"execution_count": 20
 			},
 			{
 				"cell_type": "code",
@@ -89,7 +89,7 @@
 					"# Set the spark config to be able to get the partitioned columns year and month as string\r\n",
 					"# spark.conf.set(\"spark.sql.sources.partitionColumnTypeInference.enabled\", \"false\")"
 				],
-				"execution_count": 52
+				"execution_count": 21
 			},
 			{
 				"cell_type": "markdown",
@@ -123,7 +123,7 @@
 					"family_membership_df = spark.read.parquet(f\"{silver_folder_path}/FamilyMembership\")\r\n",
 					"family_df = spark.read.parquet(f\"{silver_folder_path}/Family\")"
 				],
-				"execution_count": 53
+				"execution_count": 22
 			},
 			{
 				"cell_type": "markdown",
@@ -155,7 +155,7 @@
 					"# import\r\n",
 					"from pyspark.sql.functions import *"
 				],
-				"execution_count": 54
+				"execution_count": 23
 			},
 			{
 				"cell_type": "markdown",
@@ -192,7 +192,7 @@
 					"                        .orderBy('counts') \\\r\n",
 					"                        .dropna(how='any') # Drop null values"
 				],
-				"execution_count": 55
+				"execution_count": 24
 			},
 			{
 				"cell_type": "code",
@@ -210,7 +210,7 @@
 				"source": [
 					"#idv_age_grp_cnt_df.show(5)"
 				],
-				"execution_count": 56
+				"execution_count": 25
 			},
 			{
 				"cell_type": "markdown",
@@ -248,7 +248,7 @@
 					"                        .dropna(how='any') \\\r\n",
 					"                        .limit(10)"
 				],
-				"execution_count": 57
+				"execution_count": 26
 			},
 			{
 				"cell_type": "markdown",
@@ -286,7 +286,7 @@
 					"                    .orderBy(col('counts').desc()) \\\r\n",
 					"                    .dropna(how='any')"
 				],
-				"execution_count": 58
+				"execution_count": 27
 			},
 			{
 				"cell_type": "markdown",
@@ -328,7 +328,7 @@
 					"\r\n",
 					"fam_prim_cont_df = fam_prim_cont_df.select('ids', 'counts')"
 				],
-				"execution_count": 59
+				"execution_count": 28
 			},
 			{
 				"cell_type": "markdown",
@@ -370,7 +370,7 @@
 					"                    .dropna(how='any')\r\n",
 					""
 				],
-				"execution_count": 60
+				"execution_count": 29
 			},
 			{
 				"cell_type": "markdown",
@@ -411,7 +411,7 @@
 					"CREATE DATABASE IF NOT EXISTS woca_ldw_spark\r\n",
 					"LOCATION 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/gold/';"
 				],
-				"execution_count": 61
+				"execution_count": 30
 			},
 			{
 				"cell_type": "markdown",
@@ -444,7 +444,7 @@
 					"# Write data in delta fmt\r\n",
 					"idv_age_grp_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_age_grp_count\")"
 				],
-				"execution_count": 62
+				"execution_count": 31
 			},
 			{
 				"cell_type": "code",
@@ -463,7 +463,7 @@
 					"# Write data in delta fmt \r\n",
 					"fam_top_ten_cty_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_top_ten_cities\")"
 				],
-				"execution_count": 63
+				"execution_count": 32
 			},
 			{
 				"cell_type": "code",
@@ -482,7 +482,7 @@
 					"# Write data in delta fmt  \r\n",
 					"idv_fam_rship_cnt_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_cnt_df\")"
 				],
-				"execution_count": 64
+				"execution_count": 33
 			},
 			{
 				"cell_type": "code",
@@ -501,7 +501,7 @@
 					"# Write data in delta fmt  \r\n",
 					"fam_prim_cont_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.fam_prim_cont\")"
 				],
-				"execution_count": 65
+				"execution_count": 34
 			},
 			{
 				"cell_type": "code",
@@ -520,7 +520,7 @@
 					"# Write data in delta fmt  \r\n",
 					"idv_fam_rship_fam_df.write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"woca_ldw_spark.idv_fam_rship_fam\")"
 				],
-				"execution_count": 66
+				"execution_count": 35
 			},
 			{
 				"cell_type": "markdown",
@@ -551,7 +551,7 @@
 				"source": [
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": 67
+				"execution_count": 36
 			}
 		]
 	}
