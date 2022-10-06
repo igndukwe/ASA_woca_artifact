@@ -2157,7 +2157,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "3af2aa74-19cf-485c-a205-62a1ed96e2be"
+						"spark.autotune.trackingId": "f9861d4b-ae38-4be3-a2b0-4e1fb129dffc"
 					}
 				},
 				"metadata": {
@@ -2736,7 +2736,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "666beb63-553c-41e3-8e18-ae95bf7e7215"
+						"spark.autotune.trackingId": "c57d0dfe-87c9-42c7-b4ca-2ad556085453"
 					}
 				},
 				"metadata": {
@@ -3780,6 +3780,26 @@
 			},
 			"dependsOn": [],
 			"location": "australiaeast"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[idv_fam_rship_cnt_df]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw_spark",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
 		}
 	]
 }
