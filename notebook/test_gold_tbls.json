@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "c1d4d15e-5aae-455e-8241-42958241d034"
+				"spark.autotune.trackingId": "f59b1905-57d2-4028-b3a8-df1b29efc934"
 			}
 		},
 		"metadata": {
@@ -232,7 +232,7 @@
 					"                        .limit(10)\r\n",
 					"fam_top_ten_cty_df.show()"
 				],
-				"execution_count": null
+				"execution_count": 79
 			},
 			{
 				"cell_type": "markdown",
@@ -271,7 +271,7 @@
 					"                    .dropna(how='any')\r\n",
 					"idv_fam_rship_cnt_df.show()"
 				],
-				"execution_count": null
+				"execution_count": 80
 			},
 			{
 				"cell_type": "markdown",
@@ -370,7 +370,7 @@
 					"#fam_prim_cont_df = fam_prim_cont_df.withColumn('ids', row_number().over(Window.orderBy(col('counts').desc())))\r\n",
 					"fam_prim_cont_df.show()"
 				],
-				"execution_count": null
+				"execution_count": 81
 			},
 			{
 				"cell_type": "markdown",
@@ -440,7 +440,7 @@
 					"#idv_fam_rship_fam_df.printSchema()\r\n",
 					"idv_fam_rship_fam_df.show(3)"
 				],
-				"execution_count": null
+				"execution_count": 82
 			},
 			{
 				"cell_type": "markdown",
@@ -471,7 +471,7 @@
 				"source": [
 					"mssparkutils.session.stop()"
 				],
-				"execution_count": null
+				"execution_count": 83
 			}
 		]
 	}
