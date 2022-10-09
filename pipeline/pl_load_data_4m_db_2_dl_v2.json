@@ -4,7 +4,7 @@
 		"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 		"activities": [
 			{
-				"name": "Lookup SQL Tables to Export",
+				"name": "Lookup SQL tables from db",
 				"description": "Looks up the database to select a list of tables/views from the dbo schema",
 				"type": "Lookup",
 				"dependsOn": [],
@@ -36,7 +36,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Lookup SQL Tables to Export",
+						"activity": "Lookup SQL tables from db",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -51,7 +51,7 @@
 					"batchCount": 5,
 					"activities": [
 						{
-							"name": "cp_data_dl",
+							"name": "Copy data to data lake",
 							"description": "Copy the data from database selected table/view to the data lake (source to sink).",
 							"type": "Copy",
 							"dependsOn": [],
@@ -118,12 +118,12 @@
 							]
 						},
 						{
-							"name": "crt_vw_dlw",
+							"name": "Script to create that table",
 							"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
 							"type": "Script",
 							"dependsOn": [
 								{
-									"activity": "cp_data_dl",
+									"activity": "Copy data to data lake",
 									"dependencyConditions": [
 										"Succeeded"
 									]

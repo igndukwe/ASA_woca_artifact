@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Execute Pipeline to extract data from db",
+				"name": "Extract data from db",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"userProperties": [],
@@ -16,11 +16,11 @@
 				}
 			},
 			{
-				"name": "Execute Pipeline to create silver tbls",
+				"name": "Create silver tables",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Convert Bronze Parquet to Delta Format",
+						"activity": "Convert bronze parquet to delta fmt",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -36,11 +36,11 @@
 				}
 			},
 			{
-				"name": "Convert Bronze Parquet to Delta Format",
+				"name": "Convert bronze parquet to delta fmt",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Execute Pipeline to extract data from db",
+						"activity": "Extract data from db",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -56,11 +56,11 @@
 				}
 			},
 			{
-				"name": "Convert Silver Parquet to Delta Format",
+				"name": "Convert silver parquet to delta fmt",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Execute Pipeline to create silver tbls",
+						"activity": "Create silver tables",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -76,11 +76,11 @@
 				}
 			},
 			{
-				"name": "Execute Pipeline to create gold tbls",
+				"name": "Create gold tables",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Convert Silver Parquet to Delta Format",
+						"activity": "Convert silver parquet to delta fmt",
 						"dependencyConditions": [
 							"Succeeded"
 						]
