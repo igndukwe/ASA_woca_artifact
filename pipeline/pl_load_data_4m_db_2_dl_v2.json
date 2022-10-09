@@ -45,7 +45,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Lookup SQL Tables to Export').output.value",
+						"value": "@activity('Lookup SQL tables from db').output.value",
 						"type": "Expression"
 					},
 					"batchCount": 5,
