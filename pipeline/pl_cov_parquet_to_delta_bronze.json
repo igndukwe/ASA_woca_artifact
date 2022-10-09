@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "nb_tran_parquet_to_delta_bronze",
+				"name": "nb trans bronz parquet to delta",
 				"description": "Notebook transforms data in the bronze folder from parquet to delta",
 				"type": "SynapseNotebook",
 				"dependsOn": [],
