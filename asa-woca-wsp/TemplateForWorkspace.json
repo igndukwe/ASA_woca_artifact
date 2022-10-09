@@ -707,7 +707,7 @@
 				"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 				"activities": [
 					{
-						"name": "Lookup SQL Tables to Export",
+						"name": "Lookup SQL tables from db",
 						"description": "Looks up the database to select a list of tables/views from the dbo schema",
 						"type": "Lookup",
 						"dependsOn": [],
@@ -740,7 +740,7 @@
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Lookup SQL Tables to Export",
+								"activity": "Lookup SQL tables from db",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -749,13 +749,13 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Lookup SQL Tables to Export').output.value",
+								"value": "@activity('Lookup SQL tables from db').output.value",
 								"type": "Expression"
 							},
 							"batchCount": 5,
 							"activities": [
 								{
-									"name": "cp_data_dl",
+									"name": "Copy data to data lake",
 									"description": "Copy the data from database selected table/view to the data lake (source to sink).",
 									"type": "Copy",
 									"dependsOn": [],
@@ -822,12 +822,12 @@
 									]
 								},
 								{
-									"name": "crt_vw_dlw",
+									"name": "Script to create that table",
 									"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
 									"type": "Script",
 									"dependsOn": [
 										{
-											"activity": "cp_data_dl",
+											"activity": "Copy data to data lake",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -895,7 +895,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Execute Pipeline to extract data from db",
+						"name": "Extract data from db",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
 						"userProperties": [],
@@ -909,11 +909,11 @@
 						}
 					},
 					{
-						"name": "Execute Pipeline to create silver tbls",
+						"name": "Create silver tables",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "Convert Bronze Parquet to Delta Format",
+								"activity": "Convert bronze parquet to delta fmt",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -930,11 +930,11 @@
 						}
 					},
 					{
-						"name": "Convert Bronze Parquet to Delta Format",
+						"name": "Convert bronze parquet to delta fmt",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "Execute Pipeline to extract data from db",
+								"activity": "Extract data from db",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -951,11 +951,11 @@
 						}
 					},
 					{
-						"name": "Convert Silver Parquet to Delta Format",
+						"name": "Convert silver parquet to delta fmt",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "Execute Pipeline to create silver tbls",
+								"activity": "Create silver tables",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -972,11 +972,11 @@
 						}
 					},
 					{
-						"name": "Execute Pipeline to create gold tbls",
+						"name": "Create gold tables",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "Convert Silver Parquet to Delta Format",
+								"activity": "Convert silver parquet to delta fmt",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -1502,6 +1502,26 @@
 			"properties": {
 				"content": {
 					"query": "SELECT *\n FROM [woca_ldw_spark].[dbo].[fam_prim_cont]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "woca_ldw_spark",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[idv_fam_rship_cnt_df]",
 					"metadata": {
 						"language": "sql"
 					},
@@ -2157,7 +2177,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "f9861d4b-ae38-4be3-a2b0-4e1fb129dffc"
+						"spark.autotune.trackingId": "cc22fd4c-e6ba-47eb-a7ed-4cc50e5a9c1a"
 					}
 				},
 				"metadata": {
@@ -2182,8 +2202,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 5
 				},
@@ -2203,7 +2222,6 @@
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"#Set the folder paths so that it can be used later. \r\n",
 							"bronze_folder_path = 'abfss://woca-data@asawocastaccdl.dfs.core.windows.net/bronze/'\r\n",
@@ -2736,7 +2754,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "c57d0dfe-87c9-42c7-b4ca-2ad556085453"
+						"spark.autotune.trackingId": "743944c6-8cbb-42c0-ba92-aaf738d47278"
 					}
 				},
 				"metadata": {
@@ -2761,8 +2779,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -3780,26 +3797,6 @@
 			},
 			"dependsOn": [],
 			"location": "australiaeast"
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[idv_fam_rship_cnt_df]",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw_spark",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
 		}
 	]
 }
