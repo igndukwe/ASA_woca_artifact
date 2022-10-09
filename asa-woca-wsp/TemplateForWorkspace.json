@@ -33,6 +33,195 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('workspaceName'), '/pl1_load_data_4m_db_2_dl_v2')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
+				"activities": [
+					{
+						"name": "Lookup SQL tables from db",
+						"description": "Looks up the database to select a list of tables/views from the dbo schema",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 60,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": "SELECT\n    s.name AS SchemaName,\n    t.name AS TableName\nFROM sys.tables t\nINNER JOIN sys.schemas s ON s.schema_id = t.schema_id\nWHERE s.name = 'dbo';",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_woca_db_lookup_activity",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "For Each Table",
+						"description": "For each of the output values ('SchemaName' and 'TableName') from the lookup table, perform two activities.",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup SQL tables from db",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup SQL tables from db').output.value",
+								"type": "Expression"
+							},
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "Copy data to data lake",
+									"description": "Copy the data from database selected table/view to the data lake (source to sink).",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_waco_db_copy_activity",
+											"type": "DatasetReference",
+											"parameters": {
+												"SchemaName": {
+													"value": "@item().SchemaName",
+													"type": "Expression"
+												},
+												"TableName": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_woca_dl",
+											"type": "DatasetReference",
+											"parameters": {
+												"datalakefolder": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Script to create that table",
+									"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Copy data to data lake",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_woca_ldw",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": {
+													"value": "DROP VIEW IF EXISTS bronze.vw_@{item().TableName};",
+													"type": "Expression"
+												}
+											},
+											{
+												"type": "NonQuery",
+												"text": {
+													"value": "CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK 'bronze/@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'DELTA' \n        ) AS [result];",
+													"type": "Expression"
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"datasrc": {
+						"type": "string",
+						"defaultValue": "woca_data_src"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-09-26T05:16:30Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/ds_woca_db_lookup_activity')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_waco_db_copy_activity')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/pl2_cov_parquet_to_delta_bronze')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -100,6 +289,122 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/notebooks/trans_bronze_parquet_to_delta')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl3_create_silver_tbls')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "This pipeline first deletes all the listed file paths in the data lake silver path if they exist then it recreates the listed external tables which in turn recreates listed files in their subfolders within the silver path  ",
+				"activities": [
+					{
+						"name": "ForEach Folder Path",
+						"description": "For each of the listed 'folder_path' and 'usp_name' in the main 'folder_path_usp_name_array' variable we will perform a delete and procedure activity ",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('folder_path_usp_name_array')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Stored procedure",
+									"description": "Creates dataset for the listed names in the silver path and create externa tables",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Delete Silver Files",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": {
+											"value": "@item().usp_name",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_woca_ldw",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Delete Silver Files",
+									"description": "Delete all the listed files from the silver path in the data lake",
+									"type": "Delete",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "ds_waco_silver_delete_activity",
+											"type": "DatasetReference",
+											"parameters": {
+												"folder_path_param": {
+													"value": "@item().folder_path",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"folder_path_usp_name_array": {
+						"type": "Array",
+						"defaultValue": [
+							{
+								"folder_path": "silver/Individual",
+								"usp_name": "silver.usp_silver_individual"
+							},
+							{
+								"folder_path": "silver/FamilyMembership",
+								"usp_name": "silver.usp_silver_family_membership"
+							},
+							{
+								"folder_path": "silver/Family",
+								"usp_name": "silver.usp_silver_family"
+							}
+						]
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_waco_silver_delete_activity')]"
 			]
 		},
 		{
@@ -221,122 +526,6 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/notebooks/create_gold_tbls')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/wocasparkpool')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/pl3_create_silver_tbls')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "This pipeline first deletes all the listed file paths in the data lake silver path if they exist then it recreates the listed external tables which in turn recreates listed files in their subfolders within the silver path  ",
-				"activities": [
-					{
-						"name": "ForEach Folder Path",
-						"description": "For each of the listed 'folder_path' and 'usp_name' in the main 'folder_path_usp_name_array' variable we will perform a delete and procedure activity ",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@variables('folder_path_usp_name_array')",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Stored procedure",
-									"description": "Creates dataset for the listed names in the silver path and create externa tables",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "Delete Silver Files",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": {
-											"value": "@item().usp_name",
-											"type": "Expression"
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "ls_woca_ldw",
-										"type": "LinkedServiceReference"
-									}
-								},
-								{
-									"name": "Delete Silver Files",
-									"description": "Delete all the listed files from the silver path in the data lake",
-									"type": "Delete",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "ds_waco_silver_delete_activity",
-											"type": "DatasetReference",
-											"parameters": {
-												"folder_path_param": {
-													"value": "@item().folder_path",
-													"type": "Expression"
-												}
-											}
-										},
-										"enableLogging": false,
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"variables": {
-					"folder_path_usp_name_array": {
-						"type": "Array",
-						"defaultValue": [
-							{
-								"folder_path": "silver/Individual",
-								"usp_name": "silver.usp_silver_individual"
-							},
-							{
-								"folder_path": "silver/FamilyMembership",
-								"usp_name": "silver.usp_silver_family_membership"
-							},
-							{
-								"folder_path": "silver/Family",
-								"usp_name": "silver.usp_silver_family"
-							}
-						]
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]",
-				"[concat(variables('workspaceId'), '/datasets/ds_waco_silver_delete_activity')]"
 			]
 		},
 		{
@@ -691,195 +880,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2022-09-26T05:16:23Z"
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/datasets/ds_woca_db_lookup_activity')]",
-				"[concat(variables('workspaceId'), '/datasets/ds_waco_db_copy_activity')]",
-				"[concat(variables('workspaceId'), '/datasets/ds_woca_dl')]",
-				"[concat(variables('workspaceId'), '/linkedServices/ls_woca_ldw')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/pl1_load_data_4m_db_2_dl_v2')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
-				"activities": [
-					{
-						"name": "Lookup SQL tables from db",
-						"description": "Looks up the database to select a list of tables/views from the dbo schema",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 60,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": "SELECT\n    s.name AS SchemaName,\n    t.name AS TableName\nFROM sys.tables t\nINNER JOIN sys.schemas s ON s.schema_id = t.schema_id\nWHERE s.name = 'dbo';",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "ds_woca_db_lookup_activity",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "For Each Table",
-						"description": "For each of the output values ('SchemaName' and 'TableName') from the lookup table, perform two activities.",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Lookup SQL tables from db",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Lookup SQL tables from db').output.value",
-								"type": "Expression"
-							},
-							"batchCount": 5,
-							"activities": [
-								{
-									"name": "Copy data to data lake",
-									"description": "Copy the data from database selected table/view to the data lake (source to sink).",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "SqlServerSource",
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings"
-											}
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "ds_waco_db_copy_activity",
-											"type": "DatasetReference",
-											"parameters": {
-												"SchemaName": {
-													"value": "@item().SchemaName",
-													"type": "Expression"
-												},
-												"TableName": {
-													"value": "@item().TableName",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_woca_dl",
-											"type": "DatasetReference",
-											"parameters": {
-												"datalakefolder": {
-													"value": "@item().TableName",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								},
-								{
-									"name": "Script to create that table",
-									"description": "Uses an SQL query to create views/tables in the data lake virtual warehouse. NOTE: data hast to be copied into the data lake before views/tables can be created.",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "Copy data to data lake",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "ls_woca_ldw",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "NonQuery",
-												"text": {
-													"value": "DROP VIEW IF EXISTS bronze.vw_@{item().TableName};",
-													"type": "Expression"
-												}
-											},
-											{
-												"type": "NonQuery",
-												"text": {
-													"value": "CREATE VIEW bronze.vw_@{item().TableName} AS SELECT * FROM \n        OPENROWSET(\n            BULK 'bronze/@{item().TableName}', \n            DATA_SOURCE = '@{pipeline().parameters.datasrc}', \n            FORMAT = 'DELTA' \n        ) AS [result];",
-													"type": "Expression"
-												}
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"parameters": {
-					"datasrc": {
-						"type": "string",
-						"defaultValue": "woca_data_src"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2022-09-26T05:16:30Z"
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/datasets/ds_woca_db_lookup_activity')]",
@@ -1266,13 +1266,13 @@
 						"timeZone": "New Zealand Standard Time",
 						"schedule": {
 							"minutes": [
-								55
+								30
 							],
 							"hours": [
 								12
 							],
 							"weekDays": [
-								"Thursday"
+								"Monday"
 							]
 						}
 					}
@@ -1482,46 +1482,6 @@
 				},
 				"content": {
 					"query": "USE woca_ldw_spark\n\nSELECT * FROM dbo.individualagegroupcount\n\nDROP EXTERNAL TABLE individualagegroupcount;",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw_spark",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "SELECT *\n FROM [woca_ldw_spark].[dbo].[fam_prim_cont]",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "woca_ldw_spark",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "SELECT TOP (100) *\n FROM [woca_ldw_spark].[dbo].[idv_fam_rship_cnt_df]",
 					"metadata": {
 						"language": "sql"
 					},
@@ -3381,7 +3341,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "9db44dd9-e7f4-4aa1-9048-1960418f6a8c"
+						"spark.autotune.trackingId": "f8e6fe3d-33a4-4638-bac1-8b2ee8c50d28"
 					}
 				},
 				"metadata": {
@@ -3406,7 +3366,8 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 1
 				},
@@ -3476,7 +3437,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "e9e8bb1e-828e-48f4-9e2c-2c98037d3e01"
+						"spark.autotune.trackingId": "1621f1f5-541a-47ec-aebe-061eacf82b54"
 					}
 				},
 				"metadata": {
@@ -3501,7 +3462,8 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 1
 				},
