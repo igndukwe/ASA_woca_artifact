@@ -1,5 +1,5 @@
 {
-	"name": "pl_load_data_4m_db_2_dl_v2",
+	"name": "pl1_load_data_4m_db_2_dl_v2",
 	"properties": {
 		"description": "This pipeline loads the tables/views from  database into the data lake as well as the data inside the bronze folder in the data lake.",
 		"activities": [

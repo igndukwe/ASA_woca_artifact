@@ -1,5 +1,5 @@
 {
-	"name": "pl_cov_parquet_to_delta_bronze",
+	"name": "pl2_cov_parquet_to_delta_bronze",
 	"properties": {
 		"activities": [
 			{
