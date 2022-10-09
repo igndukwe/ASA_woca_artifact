@@ -33,7 +33,7 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_cov_parquet_to_delta_bronze')]",
+			"name": "[concat(parameters('workspaceName'), '/pl2_cov_parquet_to_delta_bronze')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -103,7 +103,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_cov_parquet_to_delta_silver')]",
+			"name": "[concat(parameters('workspaceName'), '/pl4_cov_parquet_to_delta_silver')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -173,7 +173,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_create_gold_tbls')]",
+			"name": "[concat(parameters('workspaceName'), '/pl5_create_gold_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -224,7 +224,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_create_silver_tbls')]",
+			"name": "[concat(parameters('workspaceName'), '/pl3_create_silver_tbls')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -700,7 +700,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_load_data_4m_db_2_dl_v2')]",
+			"name": "[concat(parameters('workspaceName'), '/pl1_load_data_4m_db_2_dl_v2')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -901,7 +901,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_load_data_4m_db_2_dl_v2",
+								"referenceName": "pl1_load_data_4m_db_2_dl_v2",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -922,7 +922,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_create_silver_tbls",
+								"referenceName": "pl3_create_silver_tbls",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -943,7 +943,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_cov_parquet_to_delta_bronze",
+								"referenceName": "pl2_cov_parquet_to_delta_bronze",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -964,7 +964,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_cov_parquet_to_delta_silver",
+								"referenceName": "pl4_cov_parquet_to_delta_silver",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -985,7 +985,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
-								"referenceName": "pl_create_gold_tbls",
+								"referenceName": "pl5_create_gold_tbls",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -1000,11 +1000,11 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/pl_load_data_4m_db_2_dl_v2')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_create_silver_tbls')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_bronze')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_cov_parquet_to_delta_silver')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_create_gold_tbls')]"
+				"[concat(variables('workspaceId'), '/pipelines/pl1_load_data_4m_db_2_dl_v2')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl3_create_silver_tbls')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl2_cov_parquet_to_delta_bronze')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl4_cov_parquet_to_delta_silver')]",
+				"[concat(variables('workspaceId'), '/pipelines/pl5_create_gold_tbls')]"
 			]
 		},
 		{
