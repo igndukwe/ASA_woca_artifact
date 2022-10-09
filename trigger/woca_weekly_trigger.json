@@ -20,13 +20,13 @@
 				"timeZone": "New Zealand Standard Time",
 				"schedule": {
 					"minutes": [
-						55
+						30
 					],
 					"hours": [
 						12
 					],
 					"weekDays": [
-						"Thursday"
+						"Monday"
 					]
 				}
 			}
