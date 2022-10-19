@@ -5,7 +5,7 @@
 			"name": "1_init"
 		},
 		"content": {
-			"query": "USE master\nGO\n\nCREATE DATABASE woca_ldw\nGO\n\nALTER DATABASE woca_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE woca_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO\n",
+			"query": "USE master\nGO\n\nCREATE DATABASE tahi_synergia_ldw\nGO\n\nALTER DATABASE tahi_synergia_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE tahi_synergia_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO\n",
 			"metadata": {
 				"language": "sql"
 			},
