@@ -10,7 +10,7 @@
 				"language": "sql"
 			},
 			"currentConnection": {
-				"databaseName": "woca_ldw",
+				"databaseName": "tahi_synergia_ldw",
 				"poolName": "Built-in"
 			},
 			"resultLimit": 5000
