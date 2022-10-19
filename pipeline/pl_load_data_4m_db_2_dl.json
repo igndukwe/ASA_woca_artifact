@@ -148,10 +148,6 @@
 										"type": "String"
 									}
 								}
-							},
-							"linkedServiceName": {
-								"referenceName": "ls_woca_ldw",
-								"type": "LinkedServiceReference"
 							}
 						}
 					]

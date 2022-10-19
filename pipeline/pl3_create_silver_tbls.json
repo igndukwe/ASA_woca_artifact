@@ -40,10 +40,6 @@
 									"value": "@item().usp_name",
 									"type": "Expression"
 								}
-							},
-							"linkedServiceName": {
-								"referenceName": "ls_woca_ldw",
-								"type": "LinkedServiceReference"
 							}
 						},
 						{
