@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "nb trans bronz parquet to delta",
+				"name": "nb trans bronze parquet to delta",
 				"description": "Notebook transforms data in the bronze folder from parquet to delta",
 				"type": "SynapseNotebook",
 				"dependsOn": [],
@@ -21,10 +21,6 @@
 						"type": "NotebookReference"
 					},
 					"snapshot": true,
-					"sparkPool": {
-						"referenceName": "wocasparkpool",
-						"type": "BigDataPoolReference"
-					},
 					"executorSize": null,
 					"conf": {
 						"spark.dynamicAllocation.enabled": null,
